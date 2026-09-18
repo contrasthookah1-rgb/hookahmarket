@@ -17,7 +17,7 @@ jobs:
       - name: Call sync-stock endpoint
         run: |
           status=$(curl -s -o /tmp/body.json -w "%{http_code}" \
-           -X GET "https://contrast-hookah.kz/api/admin/sync-stock" \
+           -X GET "https://www.contrast-hookah.kz/api/admin/sync-stock" \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}")
           echo "HTTP $status"
           cat /tmp/body.json
