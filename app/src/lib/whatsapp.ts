@@ -29,7 +29,8 @@ export interface OrderNotificationInput {
 }
 
 export async function sendOrderNotification(input: OrderNotificationInput): Promise<{ sent: boolean }> {
-  const managerPhone = process.env[MANAGER_PHONE_ENV_VAR[input.branch]];
+  // Per-branch number if set, otherwise the shared shop number from the site's WhatsApp button.
+  const managerPhone = process.env[MANAGER_PHONE_ENV_VAR[input.branch]] || process.env.NEXT_PUBLIC_WHATSAPP_NUMBER;
   const text =
     `Новый заказ #${input.orderId}\n` +
     `${input.customerName}, ${input.customerPhone}\n` +
@@ -52,8 +53,24 @@ export async function sendOrderNotification(input: OrderNotificationInput): Prom
     body: JSON.stringify({
       messaging_product: "whatsapp",
       to: managerPhone,
-      type: "text",
-      text: { body: text },
+      // Free-form text is rejected outside the 24h window after the recipient last wrote to
+      // the bot, so a pre-approved template is the only reliable way to notify.
+      type: "template",
+      template: {
+        name: process.env.WHATSAPP_TEMPLATE_NAME || "new_order",
+        language: { code: "ru" },
+        components: [
+          {
+            type: "body",
+            parameters: [
+              String(input.orderId),
+              `${input.customerName}, ${input.customerPhone}`,
+              input.itemsSummary,
+              `${input.totalTenge.toLocaleString("ru-RU")} ₸`,
+            ].map((v) => ({ type: "text", text: v })),
+          },
+        ],
+      },
     }),
   });
 
