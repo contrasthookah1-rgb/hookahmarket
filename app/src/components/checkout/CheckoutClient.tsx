@@ -6,18 +6,16 @@ import { ConsentCheckbox } from "@/components/checkout/ConsentCheckbox";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
+import type { Branch } from "@/lib/branches";
+import { BRANCHES } from "@/lib/branches";
 import { useCart } from "@/lib/cart-context";
 import { formatPrice, parsePrice } from "@/lib/format";
 
-type Branch = "left" | "centre" | "alfarabi";
 type DeliveryType = "pickup" | "delivery";
 
-// Real addresses, confirmed by Адилхан 2026-09-10.
-const BRANCH_OPTIONS: { value: Branch; label: string }[] = [
-  { value: "centre", label: "ул. Шокана Уалиханова, 1 (2 этаж) — Лаундж-бар и Hookah Market" },
-  { value: "left", label: "ул. Кайыма Мухамедханова, 4В — Лаундж-бар" },
-  { value: "alfarabi", label: "проспект Аль-Фараби, 9/2 — Лаундж-бар" },
-];
+const BRANCH_OPTIONS: { value: Branch; label: string }[] = (["centre", "left", "alfarabi"] as const).map(
+  (value) => ({ value, label: `${BRANCHES[value].address} — ${BRANCHES[value].note}` }),
+);
 
 interface CheckoutResult {
   orderId: number | null;
