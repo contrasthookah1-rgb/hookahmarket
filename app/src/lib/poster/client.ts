@@ -81,9 +81,14 @@ export async function posterFetch<T>(
     throw new PosterApiError(`Poster API HTTP ${res.status} on ${method} (account: ${account})`, res.status);
   }
 
-  const json = (await res.json()) as { response?: T; error?: string; code?: number };
+  const json = (await res.json()) as { response?: T; error?: string | { code?: number; message?: string }; code?: number };
   if (json.error) {
-    throw new PosterApiError(`Poster API error on ${method} (account: ${account}): ${json.error}`, json.code);
+    // Poster's error shape isn't consistent across endpoints (sometimes a flat
+    // code, sometimes {code, message} nested under error) — log the raw body
+    // instead of assuming a shape, so a real failure doesn't come through as
+    // just a bare, unexplained number.
+    const detail = typeof json.error === "object" ? JSON.stringify(json.error) : String(json.error);
+    throw new PosterApiError(`Poster API error on ${method} (account: ${account}): ${detail}`, json.code);
   }
   return json.response as T;
 }
