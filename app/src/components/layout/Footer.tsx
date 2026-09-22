@@ -1,6 +1,7 @@
-import { MessageCircle } from "lucide-react";
 import Link from "next/link";
 import { Container } from "@/components/ui/Container";
+import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon";
+import { BRANCHES, INSTAGRAM_URL } from "@/lib/branches";
 
 const LINKS = [
   { href: "/catalog", label: "Каталог" },
@@ -14,10 +15,20 @@ export function Footer() {
   return (
     <footer className="bg-surface-inverse px-5 py-16 font-body text-sm text-foreground-on-dark-muted">
       <Container className="flex flex-wrap justify-between gap-10">
-        <div>
-          <div className="mb-2 tracking-wider text-foreground-on-dark uppercase">Contrast</div>
-          <div>Astana, Kazakhstan</div>
-          <div>Ежедневно 10:00–02:00</div>
+        <div className="flex flex-col gap-4">
+          <div className="tracking-wider text-foreground-on-dark uppercase">Contrast</div>
+          {Object.values(BRANCHES).map((b) => (
+            <a
+              key={b.mapUrl}
+              href={b.mapUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="transition-colors duration-150 ease-standard hover:text-foreground-on-dark"
+            >
+              <div>{b.address}</div>
+              <div className="text-xs">{b.hours}</div>
+            </a>
+          ))}
         </div>
 
         <nav aria-label="Дополнительная навигация" className="flex flex-col gap-2">
@@ -40,10 +51,18 @@ export function Footer() {
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 transition-colors duration-150 ease-standard hover:text-foreground-on-dark"
             >
-              <MessageCircle className="size-4" aria-hidden="true" />
+              <WhatsAppIcon className="size-4" />
               Написать в WhatsApp
             </a>
           )}
+          <a
+            href={INSTAGRAM_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="transition-colors duration-150 ease-standard hover:text-foreground-on-dark"
+          >
+            Instagram
+          </a>
           <div>© {new Date().getFullYear()} Contrast — Premium Hookah Shop</div>
         </div>
       </Container>

@@ -1,14 +1,17 @@
 "use client";
 
-import { MessageCircle, Search, ShoppingBag, User } from "lucide-react";
+import { Search, ShoppingBag, User } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Container } from "@/components/ui/Container";
 import { Tooltip } from "@/components/ui/Tooltip";
+import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon";
 import { useCart } from "@/lib/cart-context";
 
 // Ported from the approved final prototype (contrast-mockup-design-alternatives-nine
-// .vercel.app, 2026-09-10): nav with a circular gold "C" mark, fixed page links
+// .vercel.app, 2026-09-10): nav with the brand's gold "C" emblem (real logo mark,
+// added 2026-09-22, cut from the client's PDF/PSD), fixed page links
 // (not a category list — those live on the homepage's CategoryPills and
 // /catalog itself), and a search field. The dark address/hours utility bar
 // that used to sit above this was dropped (2026-09-10, on request) — it
@@ -29,10 +32,8 @@ export function Header({ isLoggedIn }: { isLoggedIn: boolean }) {
     <header className="sticky top-0 z-40">
       <div className="border-b border-border bg-surface/95 backdrop-blur">
         <Container className="flex h-[72px] items-center gap-6">
-          <Link href="/" className="flex shrink-0 items-center gap-2.5">
-            <span className="flex size-[30px] items-center justify-center rounded-full border border-gold font-display text-sm text-gold">
-              C
-            </span>
+          <Link href="/" className="flex shrink-0 items-center gap-2">
+            <Image src="/logo-mark.png" alt="" width={279} height={344} className="h-9 w-auto" priority />
             <span className="font-body text-lg font-medium tracking-wider text-foreground uppercase">
               Contrast
             </span>
@@ -90,7 +91,7 @@ export function Header({ isLoggedIn }: { isLoggedIn: boolean }) {
                   aria-label="Написать в WhatsApp"
                   className="flex size-11 items-center justify-center rounded-sm text-foreground-secondary transition-colors duration-150 ease-standard hover:bg-surface-sunken hover:text-foreground"
                 >
-                  <MessageCircle className="size-[18px]" aria-hidden="true" />
+                  <WhatsAppIcon className="size-[18px]" />
                 </a>
               </Tooltip>
             )}
