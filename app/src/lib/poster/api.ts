@@ -168,7 +168,9 @@ export async function createIncomingOrder(input: CreateIncomingOrderInput): Prom
     method: "POST",
     body: {
       phone: input.phone,
-      client_name: input.customerName,
+      // Poster has no "client_name" field — first_name/last_name only. We only
+      // collect one name field at checkout, so it all goes into first_name.
+      first_name: input.customerName,
       comment: input.comment,
       products: input.items.map((it) => ({ product_id: it.productId, count: it.quantity })),
     },
