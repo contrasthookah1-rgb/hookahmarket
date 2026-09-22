@@ -52,6 +52,30 @@ interface PosterFetchOptions {
   body?: unknown;
 }
 
+// Poster's own examples POST via PHP's http_build_query, not a JSON body — a
+// nested array like `products: [{product_id: 1}]` becomes the form-encoded
+// `products[0][product_id]=1`. Mirrors that so the fields actually arrive
+// (a JSON body left every field looking unset to Poster, failing with a bare
+// "42 — переменной не существует" no matter what the fields were named).
+function toFormEntries(value: unknown, prefix: string, out: string[]): void {
+  if (value === undefined || value === null) return;
+  if (Array.isArray(value)) {
+    value.forEach((v, i) => toFormEntries(v, `${prefix}[${i}]`, out));
+  } else if (typeof value === "object") {
+    for (const [key, v] of Object.entries(value as Record<string, unknown>)) {
+      toFormEntries(v, prefix ? `${prefix}[${key}]` : key, out);
+    }
+  } else {
+    out.push(`${encodeURIComponent(prefix)}=${encodeURIComponent(String(value))}`);
+  }
+}
+
+function toFormBody(body: unknown): string {
+  const out: string[] = [];
+  toFormEntries(body, "", out);
+  return out.join("&");
+}
+
 /**
  * Calls a single Poster API method against one account. Throws PosterConfigError
  * if the account's token is missing, PosterApiError if Poster returns an error
@@ -72,8 +96,8 @@ export async function posterFetch<T>(
 
   const res = await fetch(url, {
     method: httpMethod,
-    headers: body ? { "Content-Type": "application/json" } : undefined,
-    body: body ? JSON.stringify(body) : undefined,
+    headers: body ? { "Content-Type": "application/x-www-form-urlencoded" } : undefined,
+    body: body ? toFormBody(body) : undefined,
     cache: "no-store",
   });
 
