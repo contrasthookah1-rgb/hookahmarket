@@ -21,6 +21,9 @@ export default async function AdminHeroSlidesPage() {
         <Link href="/admin/products" className="font-body text-sm text-foreground-secondary hover:text-foreground">
           Фото товаров
         </Link>
+        <Link href="/admin/orders" className="font-body text-sm text-foreground-secondary hover:text-foreground">
+          Заказы
+        </Link>
       </div>
       <h1 className="mb-2 font-display text-2xl text-foreground">Слайды на главной</h1>
       <p className="mb-6 font-body text-sm text-foreground-muted">
