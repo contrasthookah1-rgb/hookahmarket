@@ -167,6 +167,10 @@ export async function createIncomingOrder(input: CreateIncomingOrderInput): Prom
   return posterFetch<{ incoming_order_id: string }>(input.branch, "incomingOrders.createIncomingOrder", {
     method: "POST",
     body: {
+      // Every branch account is single-spot (confirmed via menu.getProducts on
+      // all three) — every Poster doc example for this method sends spot_id,
+      // ours never did.
+      spot_id: 1,
       phone: input.phone,
       // Poster has no "client_name" field — first_name/last_name only. We only
       // collect one name field at checkout, so it all goes into first_name.
