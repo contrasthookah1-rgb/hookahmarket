@@ -117,8 +117,6 @@ export async function posterFetch<T>(
   return json.response as T;
 }
 
-export const BRANCH_ACCOUNTS: Extract<PosterAccount, "left" | "centre" | "alfarabi">[] = [
-  "left",
-  "centre",
-  "alfarabi",
-];
+// Only Уалиханова (centre) feeds the site's stock and takes its orders —
+// client's call, 2026-09-23. left/alfarabi tokens stay configured but unused.
+export const BRANCH_ACCOUNTS: Extract<PosterAccount, "left" | "centre" | "alfarabi">[] = ["centre"];

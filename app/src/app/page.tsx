@@ -4,20 +4,23 @@ import { PromoTiles } from "@/components/home/PromoTiles";
 import { TrendingSection } from "@/components/home/TrendingSection";
 import { Hero } from "@/components/layout/Hero";
 import { getCategories, getProducts } from "@/lib/catalog";
-import { getActiveHeroSlides } from "@/lib/hero-slides";
+import { getActiveHeroSlides, getHeroTiles } from "@/lib/hero-slides";
 
 export default async function Home() {
-  const [categories, products, heroSlides] = await Promise.all([
+  const [categories, products, heroSlides, heroTiles] = await Promise.all([
     getCategories(),
     getProducts(),
     getActiveHeroSlides(),
+    getHeroTiles(),
   ]);
+
+  const inStockCount = products.filter((p) => p.stock > 0).length;
 
   return (
     <>
-      <Hero productCount={products.length} />
+      <Hero productCount={inStockCount} tiles={heroTiles} />
       <CategoryPills categories={categories} />
-      <PromoTiles productCount={products.length} />
+      <PromoTiles productCount={inStockCount} />
       <PromoSlides slides={heroSlides} />
       <TrendingSection products={products} />
     </>

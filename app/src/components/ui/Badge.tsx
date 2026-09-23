@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-type Tone = "danger" | "danger-solid" | "success";
+type Tone = "danger" | "danger-solid" | "success" | "neutral";
 
 const toneClasses: Record<Tone, string> = {
   danger: "bg-danger-soft text-danger",
@@ -10,6 +10,8 @@ const toneClasses: Record<Tone, string> = {
   // Use this instead wherever the badge sits on top of an image.
   "danger-solid": "bg-danger text-white shadow-sm",
   success: "bg-success-soft text-success",
+  // "Ожидаем поставку" — opaque for the same over-a-photo reason as danger-solid.
+  neutral: "bg-surface-inverse text-foreground-on-dark shadow-sm",
 };
 
 export function Badge({

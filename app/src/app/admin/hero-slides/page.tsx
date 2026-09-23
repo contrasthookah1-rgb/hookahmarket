@@ -2,15 +2,20 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { deleteHeroSlide, toggleHeroSlideActive } from "@/app/admin/actions";
 import { HeroSlideForm } from "@/components/admin/HeroSlideForm";
+import { HeroTileForm } from "@/components/admin/HeroTileForm";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
 import { requireAdmin } from "@/lib/admin-auth";
 import { hasDatabase, prisma } from "@/lib/db";
+import { DEFAULT_HERO_TILES } from "@/lib/hero-slides";
 
 export default async function AdminHeroSlidesPage() {
   if (!(await requireAdmin())) redirect("/admin/login");
 
-  const slides = hasDatabase ? await prisma.heroSlide.findMany({ orderBy: { order: "asc" } }) : [];
+  const [slides, tiles] = hasDatabase
+    ? await Promise.all([prisma.heroSlide.findMany({ orderBy: { order: "asc" } }), prisma.heroTile.findMany()])
+    : [[], []];
+  const tileBySlot = new Map(tiles.map((t) => [t.slot, t]));
 
   return (
     <Container className="max-w-2xl py-8">
@@ -25,9 +30,33 @@ export default async function AdminHeroSlidesPage() {
           Заказы
         </Link>
       </div>
-      <h1 className="mb-2 font-display text-2xl text-foreground">Слайды на главной</h1>
+      {hasDatabase && (
+        <section className="mb-10">
+          <h1 className="mb-2 font-display text-2xl text-foreground">Фото на первом экране</h1>
+          <p className="mb-6 font-body text-sm text-foreground-muted">
+            4 фото в сетке 2×2 в самом верху главной. Квадрат от 1200×1200 px, главное — по центру (края
+            обрезаются). «Сбросить» возвращает стандартное фото категории.
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {DEFAULT_HERO_TILES.map((fallback, slot) => {
+              const tile = tileBySlot.get(slot);
+              return (
+                <HeroTileForm
+                  key={`${slot}-${tile?.imageUrl ?? ""}-${tile?.linkUrl ?? ""}`}
+                  slot={slot}
+                  initialImageUrl={tile?.imageUrl ?? fallback.imageUrl}
+                  initialLinkUrl={tile?.linkUrl ?? fallback.linkUrl}
+                  isCustom={!!tile}
+                />
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      <h2 className="mb-2 font-display text-2xl text-foreground">Слайды на главной</h2>
       <p className="mb-6 font-body text-sm text-foreground-muted">
-        Промо-баннеры (акции, новости) на главной странице — картинка + ссылка, куда ведёт клик.
+        Промо-баннеры (акции, новости) ниже на главной — картинка + ссылка, куда ведёт клик. Размер 2100×900 px (21:9).
       </p>
 
       {!hasDatabase ? (
