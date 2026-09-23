@@ -9,6 +9,16 @@ import { requireAdmin } from "@/lib/admin-auth";
 import { hasDatabase, prisma } from "@/lib/db";
 import { DEFAULT_HERO_TILES } from "@/lib/hero-slides";
 
+// Show "/catalog?category=Кальяны", not "%D0%9A…" — links copied from the
+// browser's address bar come percent-encoded. Display only; both forms work.
+function readableUrl(url: string): string {
+  try {
+    return decodeURI(url);
+  } catch {
+    return url;
+  }
+}
+
 export default async function AdminHeroSlidesPage() {
   if (!(await requireAdmin())) redirect("/admin/login");
 
@@ -45,7 +55,7 @@ export default async function AdminHeroSlidesPage() {
                   key={`${slot}-${tile?.imageUrl ?? ""}-${tile?.linkUrl ?? ""}`}
                   slot={slot}
                   initialImageUrl={tile?.imageUrl ?? fallback.imageUrl}
-                  initialLinkUrl={tile?.linkUrl ?? fallback.linkUrl}
+                  initialLinkUrl={readableUrl(tile?.linkUrl ?? fallback.linkUrl)}
                   isCustom={!!tile}
                 />
               );
@@ -78,7 +88,7 @@ export default async function AdminHeroSlidesPage() {
                   <img src={slide.imageUrl} alt="" className="h-16 w-24 shrink-0 rounded-sm object-cover" />
                   <div className="min-w-0 flex-1 font-body text-sm">
                     <div className="truncate text-foreground-muted">{slide.imageUrl}</div>
-                    <div className="truncate text-foreground-secondary">→ {slide.linkUrl}</div>
+                    <div className="truncate text-foreground-secondary">→ {readableUrl(slide.linkUrl)}</div>
                   </div>
                   <form
                     action={async () => {
