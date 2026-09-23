@@ -89,22 +89,28 @@ export function ProductDetailClient({
             )}
           </div>
           <div className="mb-6">
-            <Badge tone={product.stock <= 5 ? "danger" : "success"}>
-              {product.stock <= 5 ? `Осталось ${product.stock} шт` : "В наличии"}
-            </Badge>
+            {product.stock > 0 ? (
+              <Badge tone={product.stock <= 5 ? "danger" : "success"}>
+                {product.stock <= 5 ? `Осталось ${product.stock} шт` : "В наличии"}
+              </Badge>
+            ) : (
+              <Badge tone="neutral">Ожидаем поставку</Badge>
+            )}
           </div>
-          <div className="mb-8 flex flex-wrap items-center gap-4">
-            <QuantityStepper value={qty} onChange={setQty} max={product.stock} />
-            <Button variant="primary" size="lg" onClick={handleAddToCart}>
-              {justAdded ? (
-                <>
-                  <Check className="size-4" aria-hidden="true" /> Добавлено
-                </>
-              ) : (
-                "В корзину"
-              )}
-            </Button>
-          </div>
+          {product.stock > 0 && (
+            <div className="mb-8 flex flex-wrap items-center gap-4">
+              <QuantityStepper value={qty} onChange={setQty} max={product.stock} />
+              <Button variant="primary" size="lg" onClick={handleAddToCart}>
+                {justAdded ? (
+                  <>
+                    <Check className="size-4" aria-hidden="true" /> Добавлено
+                  </>
+                ) : (
+                  "В корзину"
+                )}
+              </Button>
+            </div>
+          )}
           <div className="border-t border-border py-5">
             <h2 className="mb-3 font-body text-base text-foreground">Характеристики</h2>
             <ul className="list-disc space-y-1 pl-5 font-body text-base leading-relaxed text-foreground-secondary">
@@ -112,7 +118,7 @@ export function ProductDetailClient({
               {product.flavor && <li>Вкус: {product.flavor}</li>}
               {product.strength && <li>Крепость: {product.strength}</li>}
               {product.packaging && <li>Фасовка: {product.packaging}</li>}
-              <li>Остаток: {product.stock} шт</li>
+              {product.stock > 0 && <li>Остаток: {product.stock} шт</li>}
             </ul>
           </div>
         </div>

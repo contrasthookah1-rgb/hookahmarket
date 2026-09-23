@@ -106,6 +106,15 @@ model HeroSlide {
   createdAt DateTime @default(now())
 }
 
+// 4 фото в сетке 2×2 первого экрана главной (slot 0–3, слева направо, сверху
+// вниз). Нет строки для слота — показывается стандартное фото категории, см.
+// lib/hero-slides.ts.
+model HeroTile {
+  slot     Int    @id
+  imageUrl String
+  linkUrl  String
+}
+
 // Локальный лог заказов, созданных в Poster через incomingOrders.createIncomingOrder —
 // нужен для истории уведомлений и как резерв, если сам Poster недоступен на записи.
 model Order {

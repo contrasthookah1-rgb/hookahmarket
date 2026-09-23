@@ -40,7 +40,11 @@ export function ProductCard({ product }: { product: Product }) {
         )}
         {lowStock && (
           <div className="absolute left-2.5 top-2.5">
-            <Badge tone="danger-solid">Осталось {product.stock}</Badge>
+            {product.stock > 0 ? (
+              <Badge tone="danger-solid">Осталось {product.stock}</Badge>
+            ) : (
+              <Badge tone="neutral">Ожидаем поставку</Badge>
+            )}
           </div>
         )}
       </div>

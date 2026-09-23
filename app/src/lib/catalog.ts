@@ -26,6 +26,11 @@ import type { Category, Product } from "./types";
 // till). Neither is something a customer should be able to add to cart.
 const EXCLUDED_CATEGORIES = new Set(["Lounge", "Top screen"]);
 
+// Site stock and orders come from the Уалиханова branch only (client's call,
+// 2026-09-23) — other branches' BranchStock rows may still sit in the DB from
+// older syncs, so filter them out here rather than trust they're gone.
+const STOCK_INCLUDE = { branchStock: { where: { branch: "centre" } } } as const;
+
 function toUiProduct(row: {
   id: number;
   posterId: number;
@@ -73,7 +78,7 @@ const getCachedCatalogRows = unstable_cache(
   () =>
     prisma.product.findMany({
       where: { active: true, categoryLabel: { notIn: [...EXCLUDED_CATEGORIES] } },
-      include: { branchStock: true },
+      include: STOCK_INCLUDE,
       orderBy: { id: "asc" },
     }),
   ["catalog-products"],
@@ -91,8 +96,16 @@ async function readDbProducts(): Promise<Product[] | null> {
       }
       return null;
     }
-    const products = rows.map(toUiProduct).filter((p) => p.stock > 0);
-    return products;
+    // Out-of-stock items stay listed as "Ожидаем поставку" (client's call,
+    // 2026-09-23) but sort after in-stock ones, so home/catalog lead with
+    // things that can actually be bought. Array.sort is stable. Only items
+    // Уалиханова actually carries (has a stock row for, even at 0) — ~1650
+    // synced products never had one there, and listing them all as "coming
+    // soon" would double the catalog with dead SKUs.
+    return rows
+      .filter((r) => r.branchStock.length > 0)
+      .map(toUiProduct)
+      .sort((a, b) => Number(b.stock > 0) - Number(a.stock > 0));
   } catch (err) {
     console.error("[catalog] DB read failed, falling back to mock catalog:", err);
     return null;
@@ -111,10 +124,11 @@ export async function getProducts(): Promise<Product[]> {
 export const getProductById = cache(async (id: number): Promise<Product | undefined> => {
   if (!hasDatabase) return MOCK_PRODUCTS.find((p) => p.id === id);
   try {
-    const row = await prisma.product.findUnique({ where: { id }, include: { branchStock: true } });
-    if (!row || !row.active || EXCLUDED_CATEGORIES.has(row.categoryLabel)) return undefined;
-    const product = toUiProduct(row);
-    return product.stock > 0 ? product : undefined;
+    const row = await prisma.product.findUnique({ where: { id }, include: STOCK_INCLUDE });
+    if (!row || !row.active || EXCLUDED_CATEGORIES.has(row.categoryLabel) || row.branchStock.length === 0) {
+      return undefined;
+    }
+    return toUiProduct(row);
   } catch (err) {
     console.error("[catalog] DB product read failed, falling back to mock catalog:", err);
     return MOCK_PRODUCTS.find((p) => p.id === id);
@@ -130,7 +144,7 @@ export async function getProductsByIds(ids: number[]): Promise<Product[]> {
   try {
     const rows = await prisma.product.findMany({
       where: { id: { in: ids }, active: true, categoryLabel: { notIn: [...EXCLUDED_CATEGORIES] } },
-      include: { branchStock: true },
+      include: STOCK_INCLUDE,
     });
     return rows.map(toUiProduct).filter((p) => p.stock > 0);
   } catch (err) {
@@ -149,7 +163,7 @@ export async function getRelatedProducts(product: Product, limit = 4): Promise<P
   try {
     const rows = await prisma.product.findMany({
       where: { categoryLabel: product.category, active: true, id: { not: product.id } },
-      include: { branchStock: true },
+      include: STOCK_INCLUDE,
       orderBy: { id: "asc" },
       // over-fetch: some of these will be filtered out below for being
       // out of stock, so asking for exactly `limit` would under-fill
@@ -160,37 +174,6 @@ export async function getRelatedProducts(product: Product, limit = 4): Promise<P
     console.error("[catalog] DB related-products read failed, falling back to mock catalog:", err);
     return MOCK_PRODUCTS.filter((p) => p.category === product.category && p.id !== product.id).slice(0, limit);
   }
-}
-
-const BRANCHES = ["left", "centre", "alfarabi"] as const;
-
-/**
- * Stock is per-branch (see project memory on why — the 4 Poster accounts were
- * never put through real Connect sync, so it's not just "the same total").
- * Without this, a customer could pick a branch for self-pickup (or delivery
- * dispatch) that doesn't actually have their items — the branch stock has to
- * gate which branches are even selectable at checkout, not just the
- * catalog-wide total shown on the product page.
- */
-export async function getBranchAvailability(
-  items: { productId: number; quantity: number }[]
-): Promise<Record<string, boolean>> {
-  if (!hasDatabase) {
-    // Mock data has no per-branch breakdown — treat every branch as available
-    // so the demo/dev checkout flow isn't blocked.
-    return Object.fromEntries(BRANCHES.map((b) => [b, true]));
-  }
-  const stock = await prisma.branchStock.findMany({
-    where: { productId: { in: items.map((it) => it.productId) } },
-  });
-  const quantityByProductBranch = new Map(stock.map((s) => [`${s.productId}:${s.branch}`, s.quantity]));
-
-  return Object.fromEntries(
-    BRANCHES.map((branch) => [
-      branch,
-      items.every((it) => (quantityByProductBranch.get(`${it.productId}:${branch}`) ?? 0) >= it.quantity),
-    ])
-  );
 }
 
 // Same short-lived cache + tag as getCachedCatalogRows above, for the same

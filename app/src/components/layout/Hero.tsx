@@ -1,14 +1,13 @@
-import Image from "next/image";
 import Link from "next/link";
-import { getCategoryImage } from "@/lib/category-images";
+import type { HeroTileView } from "@/lib/hero-slides";
 
 // Split-screen "Стык" hero — ported from the approved final prototype
 // (contrast-mockup-design-alternatives-nine.vercel.app, read directly via its
 // live computed styles 2026-09-10, not eyeballed): text left, 2x2 category
-// photo grid right, dark background, gold-gradient primary CTA.
-const GRID_CATEGORIES = ["Кальяны", "Табачные смеси для кальяна", "Чаши", "Аксессуары"];
+// photo grid right, dark background, gold-gradient primary CTA. The 4 grid
+// tiles (image + link) are admin-editable, see /admin/hero-slides.
 
-export function Hero({ productCount }: { productCount: number }) {
+export function Hero({ productCount, tiles }: { productCount: number; tiles: HeroTileView[] }) {
   // Rounded down to a clean hundred, same convention as the "400+" it
   // replaces — was a hardcoded guess (real in-stock count is ~1700+, audit
   // 2026-09-10), now reads live so it can't drift stale again.
@@ -41,22 +40,25 @@ export function Hero({ productCount }: { productCount: number }) {
       </div>
 
       <div className="grid h-full min-h-[280px] grid-cols-2 grid-rows-2 gap-0.5 lg:min-h-0">
-        {GRID_CATEGORIES.map((category) => {
-          const image = getCategoryImage(category);
-          return (
-            <div key={category} className="relative aspect-square overflow-hidden lg:aspect-auto">
-              {image && (
-                <Image
-                  src={image.url}
-                  alt={category}
-                  fill
-                  sizes="(min-width: 1024px) 25vw, 50vw"
-                  className="object-cover"
-                />
-              )}
-            </div>
-          );
-        })}
+        {tiles.map((tile, i) => (
+          <Link
+            key={i}
+            href={tile.linkUrl}
+            aria-label={tile.label}
+            className="group relative aspect-square overflow-hidden lg:aspect-auto"
+          >
+            {/* Plain <img>, not next/image — admin-uploaded URLs from arbitrary
+                domains, same reasoning as PromoSlides. */}
+            {tile.imageUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={tile.imageUrl}
+                alt=""
+                className="absolute inset-0 size-full object-cover transition-transform duration-300 ease-standard group-hover:scale-105"
+              />
+            )}
+          </Link>
+        ))}
       </div>
     </div>
   );

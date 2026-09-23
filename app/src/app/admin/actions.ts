@@ -121,3 +121,32 @@ export async function deleteHeroSlide(id: number): Promise<void> {
   revalidatePath("/admin/hero-slides");
   revalidatePath("/");
 }
+
+export async function saveHeroTile(formData: FormData): Promise<{ error?: string }> {
+  if (!(await requireAdmin())) redirect("/admin/login");
+  if (!hasDatabase) return { error: "database_not_configured" };
+
+  const slot = Number(formData.get("slot"));
+  const imageUrl = String(formData.get("imageUrl") ?? "").trim();
+  const linkUrl = String(formData.get("linkUrl") ?? "").trim();
+  if (![0, 1, 2, 3].includes(slot)) return { error: "Неверный слот" };
+  if (!imageUrl || !linkUrl) return { error: "Нужны и картинка, и ссылка" };
+
+  await prisma.heroTile.upsert({
+    where: { slot },
+    create: { slot, imageUrl, linkUrl },
+    update: { imageUrl, linkUrl },
+  });
+  revalidatePath("/admin/hero-slides");
+  revalidatePath("/");
+  return {};
+}
+
+/** Back to the slot's default category photo + link. */
+export async function resetHeroTile(slot: number): Promise<void> {
+  if (!(await requireAdmin())) redirect("/admin/login");
+  if (!hasDatabase) return;
+  await prisma.heroTile.deleteMany({ where: { slot } });
+  revalidatePath("/admin/hero-slides");
+  revalidatePath("/");
+}

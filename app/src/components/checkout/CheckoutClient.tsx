@@ -1,21 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ConsentCheckbox } from "@/components/checkout/ConsentCheckbox";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
-import type { Branch } from "@/lib/branches";
 import { BRANCHES } from "@/lib/branches";
 import { useCart } from "@/lib/cart-context";
 import { formatPrice, parsePrice } from "@/lib/format";
 
 type DeliveryType = "pickup" | "delivery";
-
-const BRANCH_OPTIONS: { value: Branch; label: string }[] = (["centre", "left", "alfarabi"] as const).map(
-  (value) => ({ value, label: `${BRANCHES[value].address} — ${BRANCHES[value].note}` }),
-);
 
 interface CheckoutResult {
   orderId: number | null;
@@ -28,7 +23,6 @@ export function CheckoutClient() {
   const { items, clear } = useCart();
   const [customerName, setCustomerName] = useState("");
   const [phone, setPhone] = useState("");
-  const [branch, setBranch] = useState<Branch>("centre");
   const [deliveryType, setDeliveryType] = useState<DeliveryType>("pickup");
   const [address, setAddress] = useState("");
   const [comment, setComment] = useState("");
@@ -36,49 +30,7 @@ export function CheckoutClient() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<CheckoutResult | null>(null);
-  // Stock is per-branch, not one shared total (see project notes on why) — a
-  // branch the customer didn't actually check might not have every item, so
-  // the branch picker has to be filtered to branches that do, for both
-  // self-pickup and delivery dispatch alike.
-  const [availability, setAvailability] = useState<Record<Branch, boolean> | null>(null);
-
   const subtotal = items.reduce((sum, it) => sum + parsePrice(it.product.price) * it.quantity, 0);
-
-  const itemsKey = items.map((it) => `${it.product.id}:${it.quantity}`).join(",");
-  useEffect(() => {
-    if (items.length === 0) return;
-    let cancelled = false;
-    fetch("/api/branch-availability", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ items: items.map((it) => ({ productId: it.product.id, quantity: it.quantity })) }),
-    })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (!cancelled && data) setAvailability(data.availability);
-      })
-      .catch(() => {
-        // Availability check failed — leave every branch selectable rather
-        // than block checkout over a non-critical lookup.
-      });
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- itemsKey is the intentional dependency, not items
-  }, [itemsKey]);
-
-  const availableBranches = BRANCH_OPTIONS.filter((b) => availability?.[b.value] !== false);
-
-  // Re-pick the selected branch once availability narrows it out — adjusted
-  // during render (React's recommended pattern for this) rather than in an
-  // effect, matching CatalogClient's prevInitialCategory idiom.
-  const [prevAvailability, setPrevAvailability] = useState(availability);
-  if (availability !== prevAvailability) {
-    setPrevAvailability(availability);
-    if (availableBranches.length > 0 && !availableBranches.some((b) => b.value === branch)) {
-      setBranch(availableBranches[0].value);
-    }
-  }
 
   if (result) {
     return (
@@ -124,7 +76,6 @@ export function CheckoutClient() {
         body: JSON.stringify({
           customerName,
           phone,
-          branch,
           deliveryType,
           address: deliveryType === "delivery" ? address : undefined,
           comment: comment || undefined,
@@ -141,8 +92,8 @@ export function CheckoutClient() {
       clear();
     } catch (err) {
       setError(
-        err instanceof Error && err.message === "branch_out_of_stock"
-          ? "В выбранном филиале уже не хватает товара — выберите другой филиал."
+        err instanceof Error && err.message === "product_unavailable"
+          ? "Часть товаров из корзины закончилась. Уберите их или напишите нам в WhatsApp."
           : "Не удалось оформить заказ. Попробуйте ещё раз или напишите нам в WhatsApp."
       );
     } finally {
@@ -184,23 +135,9 @@ export function CheckoutClient() {
             { value: "delivery", label: "Доставка" },
           ]}
         />
-        <Select
-          name="branch"
-          label="Филиал"
-          value={branch}
-          onChange={(e) => setBranch(e.target.value as Branch)}
-          options={availableBranches.length > 0 ? availableBranches : BRANCH_OPTIONS}
-          disabled={availableBranches.length === 0}
-        />
-        {availability && availableBranches.length === 0 && (
-          <p className="font-body text-sm text-danger">
-            Ни в одном филиале нет всех товаров из корзины сразу. Уберите часть товаров или напишите нам
-            в WhatsApp — соберём заказ вручную.
-          </p>
-        )}
-        {availability && availableBranches.length > 0 && availableBranches.length < BRANCH_OPTIONS.length && (
-          <p className="font-body text-xs text-foreground-muted">
-            Показаны только филиалы, где есть все товары из корзины.
+        {deliveryType === "pickup" && (
+          <p className="font-body text-sm text-foreground-secondary">
+            Самовывоз: {BRANCHES.centre.address}, {BRANCHES.centre.hours.toLowerCase()}
           </p>
         )}
         {deliveryType === "delivery" && (

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { getBranchAvailability, getProductsByIds } from "@/lib/catalog";
+import { getProductsByIds } from "@/lib/catalog";
 import { hasDatabase, prisma } from "@/lib/db";
 import { parsePrice } from "@/lib/format";
 import { normalizePhone } from "@/lib/phone";
@@ -9,7 +9,9 @@ import { createIncomingOrder } from "@/lib/poster/api";
 import { sendOrderNotification } from "@/lib/whatsapp";
 import { estimateDelivery } from "@/lib/yandex-delivery";
 
-const BRANCHES = ["left", "centre", "alfarabi"] as const;
+// Every site order goes to Уалиханова (client's call, 2026-09-23) — it's the
+// only branch whose stock the catalog shows, see lib/catalog.ts.
+const BRANCH = "centre";
 const CONSENT_TEXT_VERSION = "2026-09-10";
 
 // At least 10 digits once separators/spaces are stripped — accepts any
@@ -32,7 +34,6 @@ const checkoutSchema = z.object({
     .refine((v) => PHONE_DIGITS_RE.test(v) && v.replace(/\D/g, "").length >= 10, {
       message: "Введите настоящий номер телефона",
     }),
-  branch: z.enum(BRANCHES),
   deliveryType: z.enum(["pickup", "delivery"]),
   address: z.string().trim().max(300).optional(),
   comment: z.string().trim().max(300).optional(),
@@ -86,14 +87,6 @@ export async function POST(req: Request) {
   }
   const items = resolvedItems as { product: NonNullable<(typeof resolvedItems)[number]>["product"]; quantity: number }[];
 
-  // Stock is per-branch (see BranchProductId's schema comment for why) — the
-  // client already filters the branch picker to ones with full availability,
-  // but re-check here since the cart/branch can change between fetches.
-  const availability = await getBranchAvailability(items.map((it) => ({ productId: it.product.id, quantity: it.quantity })));
-  if (!availability[input.branch]) {
-    return NextResponse.json({ error: "branch_out_of_stock" }, { status: 409 });
-  }
-
   const itemsTotalTenge = items.reduce((sum, it) => sum + parsePrice(it.product.price) * it.quantity, 0);
   const delivery = input.deliveryType === "delivery" ? await estimateDelivery({ address: input.address! }) : null;
   const totalTenge = itemsTotalTenge + (delivery?.priceTenge ?? 0);
@@ -108,7 +101,7 @@ export async function POST(req: Request) {
   const order = hasDatabase
     ? await prisma.order.create({
         data: {
-          branch: input.branch,
+          branch: BRANCH,
           customerName: input.customerName,
           customerPhone: phone,
           items: orderItemsJson,
@@ -134,16 +127,16 @@ export async function POST(req: Request) {
   let posterOrderId: number | null = null;
   const branchProductIds = hasDatabase
     ? await prisma.branchProductId.findMany({
-        where: { branch: input.branch, productId: { in: items.map((it) => it.product.id) } },
+        where: { branch: BRANCH, productId: { in: items.map((it) => it.product.id) } },
       })
     : [];
   const branchProductIdByProductId = new Map(branchProductIds.map((b) => [b.productId, b.posterProductId]));
   const postable = items.every((it) => branchProductIdByProductId.has(it.product.id));
 
-  if (postable && isPosterConfigured([input.branch])) {
+  if (postable && isPosterConfigured([BRANCH])) {
     try {
       const result = await createIncomingOrder({
-        branch: input.branch,
+        branch: BRANCH,
         phone,
         customerName: input.customerName,
         comment: input.comment,
@@ -157,17 +150,17 @@ export async function POST(req: Request) {
         await prisma.order.update({ where: { id: order.id }, data: { posterOrderId } });
       }
     } catch (err) {
-      console.error(`[checkout] Poster order creation failed for branch "${input.branch}":`, err);
+      console.error(`[checkout] Poster order creation failed for branch "${BRANCH}":`, err);
     }
   } else {
     console.info(
-      `[checkout] Order for branch "${input.branch}" not pushed to Poster (not configured, or one or more items have no known product_id on that branch yet — run /api/admin/sync-stock) — logged locally only. Manager still gets the WhatsApp notification.`
+      `[checkout] Order for branch "${BRANCH}" not pushed to Poster (not configured, or one or more items have no known product_id on that branch yet — run /api/admin/sync-stock) — logged locally only. Manager still gets the WhatsApp notification.`
     );
   }
 
   const itemsSummary = items.map((it) => `${it.product.name} × ${it.quantity}`).join(", ");
   const notification = await sendOrderNotification({
-    branch: input.branch,
+    branch: BRANCH,
     orderId: order?.id ?? 0,
     customerName: input.customerName,
     customerPhone: phone,
