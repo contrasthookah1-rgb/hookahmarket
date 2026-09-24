@@ -10,8 +10,11 @@ export async function generateMetadata({
   const categoryParam = params.category;
   const category = Array.isArray(categoryParam) ? categoryParam[0] : categoryParam;
   return {
-    title: category ? `${category} — Каталог — Contrast` : "Каталог — Contrast",
-    description: "Кальяны, табак, бестабачные смеси и аксессуары в Contrast — Astana.",
+    title: category ? `${category} — купить в Астане` : "Каталог кальянов, табака и аксессуаров",
+    description: `${category ?? "Кальяны, табак, бестабачные смеси и аксессуары"} в Hookah Market Contrast, Астана. Актуальные цены и наличие, самовывоз и доставка.`,
+    alternates: {
+      canonical: category ? `/catalog?category=${encodeURIComponent(category)}` : "/catalog",
+    },
   };
 }
 
