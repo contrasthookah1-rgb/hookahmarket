@@ -7,6 +7,7 @@ import { Checkbox } from "@/components/ui/Checkbox";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Tag } from "@/components/ui/Tag";
+import { CATEGORY_SEO } from "@/lib/category-seo";
 import { parsePrice } from "@/lib/format";
 import type { Category, Product } from "@/lib/types";
 
@@ -128,7 +129,7 @@ export function CatalogClient({
   return (
     <div className="py-6 lg:py-8">
       <div className="mb-6">
-        <h1 className="mb-4 font-display text-3xl text-foreground lg:text-5xl">Каталог</h1>
+        <h1 className="mb-4 font-display text-3xl text-foreground lg:text-5xl">{category ?? "Каталог"}</h1>
         <div className="flex gap-2.5 overflow-x-auto pb-1" style={{ scrollbarWidth: "thin" }}>
           <Tag selected={!category} onClick={() => changeCategory(null)}>
             Все
@@ -278,6 +279,13 @@ export function CatalogClient({
           )}
         </div>
       </div>
+      {CATEGORY_SEO[category ?? ""] && (
+        <section className="mt-16 max-w-3xl space-y-3 border-t border-border pt-8 font-body text-sm leading-relaxed text-foreground-secondary">
+          {CATEGORY_SEO[category ?? ""].map((text) => (
+            <p key={text}>{text}</p>
+          ))}
+        </section>
+      )}
     </div>
   );
 }
