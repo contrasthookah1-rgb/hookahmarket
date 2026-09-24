@@ -15,7 +15,7 @@ export const BRANCHES: Record<
   left: {
     address: "ул. Кайыма Мухамедханова, 4В",
     note: "Лаундж-бар",
-    hours: "Пн–Вс 12:00–02:00",
+    hours: "Пн–Чт, Вс 12:00–02:00, Пт–Сб 12:00–03:00",
     mapUrl: "https://2gis.kz/astana/firm/70000001068513121",
   },
   alfarabi: {

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Container } from "@/components/ui/Container";
+import { InstagramIcon } from "@/components/ui/InstagramIcon";
 import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon";
 import { BRANCHES, INSTAGRAM_URL } from "@/lib/branches";
 
@@ -59,8 +60,9 @@ export function Footer() {
             href={INSTAGRAM_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="transition-colors duration-150 ease-standard hover:text-foreground-on-dark"
+            className="inline-flex items-center gap-2 transition-colors duration-150 ease-standard hover:text-foreground-on-dark"
           >
+            <InstagramIcon className="size-4" />
             Instagram
           </a>
           <div>© {new Date().getFullYear()} Contrast — Premium Hookah Shop</div>
