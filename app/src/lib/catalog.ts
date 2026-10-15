@@ -76,9 +76,32 @@ let dbCatalogEmptyWarned = false;
 // can invalidate on demand with revalidateTag instead of waiting it out.
 const getCachedCatalogRows = unstable_cache(
   () =>
+    // Only the columns toUiProduct reads, and only rows Уалиханова carries —
+    // the full rows (all branches, audit columns) came to ~2MB, over Next's
+    // 2MB unstable_cache limit, so the cache silently never held and every
+    // request re-queried the whole table.
     prisma.product.findMany({
-      where: { active: true, hiddenManual: false, categoryLabel: { notIn: [...EXCLUDED_CATEGORIES] } },
-      include: STOCK_INCLUDE,
+      where: {
+        active: true,
+        hiddenManual: false,
+        categoryLabel: { notIn: [...EXCLUDED_CATEGORIES] },
+        branchStock: { some: { branch: "centre" } },
+      },
+      select: {
+        id: true,
+        posterId: true,
+        categoryLabel: true,
+        name: true,
+        priceTenge: true,
+        oldPriceTenge: true,
+        brand: true,
+        flavor: true,
+        strength: true,
+        packaging: true,
+        imageUrl: true,
+        needsManualReview: true,
+        branchStock: { where: { branch: "centre" }, select: { quantity: true } },
+      },
       orderBy: { id: "asc" },
     }),
   ["catalog-products"],
@@ -99,11 +122,10 @@ async function readDbProducts(): Promise<Product[] | null> {
     // Out-of-stock items stay listed as "Ожидаем поставку" (client's call,
     // 2026-09-23) but sort after in-stock ones, so home/catalog lead with
     // things that can actually be bought. Array.sort is stable. Only items
-    // Уалиханова actually carries (has a stock row for, even at 0) — ~1650
-    // synced products never had one there, and listing them all as "coming
-    // soon" would double the catalog with dead SKUs.
+    // Уалиханова actually carries (has a stock row for, even at 0 — filtered
+    // in the query above) — ~1650 synced products never had one there, and
+    // listing them all as "coming soon" would double the catalog with dead SKUs.
     return rows
-      .filter((r) => r.branchStock.length > 0)
       .map(toUiProduct)
       .sort((a, b) => Number(b.stock > 0) - Number(a.stock > 0));
   } catch (err) {
