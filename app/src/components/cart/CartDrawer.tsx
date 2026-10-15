@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/Button";
+import { BRANCHES } from "@/lib/branches";
 import { useCart } from "@/lib/cart-context";
 import { getCategoryImage } from "@/lib/category-images";
 import { formatPrice, parsePrice } from "@/lib/format";
@@ -142,6 +143,9 @@ export function CartDrawer() {
                 Оформить заказ
               </Button>
             </Link>
+            <p className="mt-3 font-body text-sm text-foreground-secondary">
+              Самовывоз: {BRANCHES.centre.address}, {BRANCHES.centre.hours.toLowerCase()}
+            </p>
           </div>
         )}
       </aside>

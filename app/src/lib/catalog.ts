@@ -77,7 +77,7 @@ let dbCatalogEmptyWarned = false;
 const getCachedCatalogRows = unstable_cache(
   () =>
     prisma.product.findMany({
-      where: { active: true, categoryLabel: { notIn: [...EXCLUDED_CATEGORIES] } },
+      where: { active: true, hiddenManual: false, categoryLabel: { notIn: [...EXCLUDED_CATEGORIES] } },
       include: STOCK_INCLUDE,
       orderBy: { id: "asc" },
     }),
@@ -125,7 +125,7 @@ export const getProductById = cache(async (id: number): Promise<Product | undefi
   if (!hasDatabase) return MOCK_PRODUCTS.find((p) => p.id === id);
   try {
     const row = await prisma.product.findUnique({ where: { id }, include: STOCK_INCLUDE });
-    if (!row || !row.active || EXCLUDED_CATEGORIES.has(row.categoryLabel) || row.branchStock.length === 0) {
+    if (!row || !row.active || row.hiddenManual || EXCLUDED_CATEGORIES.has(row.categoryLabel) || row.branchStock.length === 0) {
       return undefined;
     }
     return toUiProduct(row);
@@ -143,7 +143,7 @@ export async function getProductsByIds(ids: number[]): Promise<Product[]> {
   if (!hasDatabase) return MOCK_PRODUCTS.filter((p) => ids.includes(p.id));
   try {
     const rows = await prisma.product.findMany({
-      where: { id: { in: ids }, active: true, categoryLabel: { notIn: [...EXCLUDED_CATEGORIES] } },
+      where: { id: { in: ids }, active: true, hiddenManual: false, categoryLabel: { notIn: [...EXCLUDED_CATEGORIES] } },
       include: STOCK_INCLUDE,
     });
     return rows.map(toUiProduct).filter((p) => p.stock > 0);
@@ -162,7 +162,7 @@ export async function getRelatedProducts(product: Product, limit = 4): Promise<P
   }
   try {
     const rows = await prisma.product.findMany({
-      where: { categoryLabel: product.category, active: true, id: { not: product.id } },
+      where: { categoryLabel: product.category, active: true, hiddenManual: false, id: { not: product.id } },
       include: STOCK_INCLUDE,
       orderBy: { id: "asc" },
       // over-fetch: some of these will be filtered out below for being

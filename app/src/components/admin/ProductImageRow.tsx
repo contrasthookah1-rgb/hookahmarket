@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { resetProductImageToPoster, setProductImage } from "@/app/admin/actions";
+import { resetProductImageToPoster, setProductHidden, setProductImage } from "@/app/admin/actions";
 import { ImageUploadField } from "@/components/admin/ImageUploadField";
 import { Button } from "@/components/ui/Button";
+import { Checkbox } from "@/components/ui/Checkbox";
 
 export function ProductImageRow({
   productId,
@@ -11,13 +12,16 @@ export function ProductImageRow({
   name,
   imageUrl,
   imageSource,
+  hiddenManual,
 }: {
   productId: number;
   categoryLabel: string;
   name: string;
   imageUrl: string | null;
   imageSource: string | null;
+  hiddenManual: boolean;
 }) {
+  const [hidden, setHidden] = useState(hiddenManual);
   const [value, setValue] = useState(imageUrl ?? "");
   const [source, setSource] = useState(imageSource);
   const [saving, setSaving] = useState(false);
@@ -63,6 +67,15 @@ export function ProductImageRow({
         />
       </div>
       <div className="flex shrink-0 flex-col items-end gap-2">
+        <Checkbox
+          label="Скрыть с сайта"
+          checked={hidden}
+          onChange={async (e) => {
+            const next = e.target.checked;
+            setHidden(next);
+            await setProductHidden(productId, next);
+          }}
+        />
         <Button size="sm" onClick={save} loading={saving} disabled={saving}>
           {saved ? "Сохранено" : "Сохранить"}
         </Button>

@@ -30,7 +30,7 @@ export default async function AdminProductsPage({ searchParams }: PageProps<"/ad
           orderBy: { id: "asc" },
           skip: (page - 1) * PAGE_SIZE,
           take: PAGE_SIZE,
-          select: { id: true, name: true, categoryLabel: true, imageUrl: true, imageSource: true },
+          select: { id: true, name: true, categoryLabel: true, imageUrl: true, imageSource: true, hiddenManual: true },
         }),
         prisma.product.count({ where }),
       ])
@@ -107,6 +107,7 @@ export default async function AdminProductsPage({ searchParams }: PageProps<"/ad
                   name={p.name}
                   imageUrl={p.imageUrl}
                   imageSource={p.imageSource}
+                  hiddenManual={p.hiddenManual}
                 />
               ))}
             </ul>

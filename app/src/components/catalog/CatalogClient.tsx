@@ -3,6 +3,7 @@
 import { Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import { ProductCard } from "@/components/commerce/ProductCard";
+import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
@@ -10,6 +11,8 @@ import { Tag } from "@/components/ui/Tag";
 import { CATEGORY_SEO } from "@/lib/category-seo";
 import { parsePrice } from "@/lib/format";
 import type { Category, Product } from "@/lib/types";
+
+const PAGE_SIZE = 24;
 
 type SortOption = "popular" | "price_asc" | "price_desc";
 
@@ -125,6 +128,12 @@ export function CatalogClient({
     if (sort === "price_desc") result.sort((a, b) => parsePrice(b.price) - parsePrice(a.price));
     return result;
   }, [category, brands, strengths, packagings, min, max, query, sort, products]);
+
+  // "Показать ещё" pagination: the limit snaps back to one page whenever any
+  // filter/sort/search changes (resetKey differs from the one it was set under).
+  const resetKey = JSON.stringify([category, brands, strengths, packagings, min, max, query, sort]);
+  const [shown, setShown] = useState({ key: resetKey, count: PAGE_SIZE });
+  const visibleCount = shown.key === resetKey ? shown.count : PAGE_SIZE;
 
   return (
     <div className="py-6 lg:py-8">
@@ -268,10 +277,23 @@ export function CatalogClient({
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:gap-5">
-            {filtered.map((p) => (
+            {filtered.slice(0, visibleCount).map((p) => (
               <ProductCard key={p.id} product={p} />
             ))}
           </div>
+          {filtered.length > visibleCount && (
+            <div className="mt-8 flex flex-col items-center gap-2">
+              <span className="font-body text-sm text-foreground-muted">
+                Показано {visibleCount} из {filtered.length}
+              </span>
+              <Button
+                variant="secondary"
+                onClick={() => setShown({ key: resetKey, count: visibleCount + PAGE_SIZE })}
+              >
+                Показать ещё
+              </Button>
+            </div>
+          )}
           {filtered.length === 0 && (
             <div className="py-16 text-center font-body text-foreground-muted">
               Ничего не найдено

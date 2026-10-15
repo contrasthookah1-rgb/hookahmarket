@@ -60,6 +60,16 @@ export async function setProductImage(productId: number, imageUrl: string): Prom
   updateTag("catalog");
 }
 
+export async function setProductHidden(productId: number, hidden: boolean): Promise<void> {
+  if (!(await requireAdmin())) redirect("/admin/login");
+  if (!hasDatabase) return;
+
+  await prisma.product.update({ where: { id: productId }, data: { hiddenManual: hidden } });
+  revalidatePath("/catalog");
+  revalidatePath("/product/[id]", "page");
+  updateTag("catalog");
+}
+
 /**
  * Un-does setProductImage's "manual" tag so the next catalog sync is free to
  * overwrite this product's photo again. Also pulls the product's current
