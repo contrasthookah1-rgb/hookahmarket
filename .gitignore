@@ -37,3 +37,9 @@ app/.vercel
 # typescript
 app/*.tsbuildinfo
 app/next-env.d.ts
+
+# internal documents with pricing / client correspondence — keep out of the client's repo
+KP_*.docx
+Brief_*.docx
+moy-cheklist-zadach.*
+docs/Poster_CRM_Audit_Report.pdf
