@@ -1,7 +1,7 @@
 "use client";
 
 import { Search } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { ProductCard } from "@/components/commerce/ProductCard";
 import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
@@ -129,11 +129,21 @@ export function CatalogClient({
     return result;
   }, [category, brands, strengths, packagings, min, max, query, sort, products]);
 
-  // "Показать ещё" pagination: the limit snaps back to one page whenever any
-  // filter/sort/search changes (resetKey differs from the one it was set under).
+  // Page numbers snap back to 1 whenever any filter/sort/search changes
+  // (resetKey differs from the one the page was set under).
   const resetKey = JSON.stringify([category, brands, strengths, packagings, min, max, query, sort]);
-  const [shown, setShown] = useState({ key: resetKey, count: PAGE_SIZE });
-  const visibleCount = shown.key === resetKey ? shown.count : PAGE_SIZE;
+  const [current, setCurrent] = useState({ key: resetKey, page: 1 });
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const page = Math.min(current.key === resetKey ? current.page : 1, totalPages);
+  const gridTop = useRef<HTMLDivElement>(null);
+  const goToPage = (next: number) => {
+    setCurrent({ key: resetKey, page: next });
+    gridTop.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+  // 1 … 4 5 6 … 20 — always first, last, and the neighbours of the current page
+  const pageItems = Array.from({ length: totalPages }, (_, i) => i + 1)
+    .filter((n) => n === 1 || n === totalPages || Math.abs(n - page) <= 1)
+    .flatMap((n, i, arr) => (i > 0 && n - arr[i - 1] > 1 ? ["gap" as const, n] : [n]));
 
   return (
     <div className="py-6 lg:py-8">
@@ -276,23 +286,38 @@ export function CatalogClient({
               />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:gap-5">
-            {filtered.slice(0, visibleCount).map((p) => (
+          <div ref={gridTop} className="scroll-mt-24 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:gap-5">
+            {filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map((p) => (
               <ProductCard key={p.id} product={p} />
             ))}
           </div>
-          {filtered.length > visibleCount && (
-            <div className="mt-8 flex flex-col items-center gap-2">
-              <span className="font-body text-sm text-foreground-muted">
-                Показано {visibleCount} из {filtered.length}
-              </span>
-              <Button
-                variant="secondary"
-                onClick={() => setShown({ key: resetKey, count: visibleCount + PAGE_SIZE })}
-              >
-                Показать ещё
+          {totalPages > 1 && (
+            <nav aria-label="Страницы каталога" className="mt-8 flex flex-wrap items-center justify-center gap-1.5">
+              <Button variant="ghost" size="sm" disabled={page === 1} onClick={() => goToPage(page - 1)}>
+                ← Назад
               </Button>
-            </div>
+              {pageItems.map((item, i) =>
+                item === "gap" ? (
+                  <span key={`gap-${i}`} className="px-1 font-body text-foreground-muted" aria-hidden="true">
+                    …
+                  </span>
+                ) : (
+                  <Button
+                    key={item}
+                    variant={item === page ? "primary" : "ghost"}
+                    size="sm"
+                    aria-current={item === page ? "page" : undefined}
+                    aria-label={`Страница ${item}`}
+                    onClick={() => goToPage(item)}
+                  >
+                    {item}
+                  </Button>
+                )
+              )}
+              <Button variant="ghost" size="sm" disabled={page === totalPages} onClick={() => goToPage(page + 1)}>
+                Вперёд →
+              </Button>
+            </nav>
           )}
           {filtered.length === 0 && (
             <div className="py-16 text-center font-body text-foreground-muted">
