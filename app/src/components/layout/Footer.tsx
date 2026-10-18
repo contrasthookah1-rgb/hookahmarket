@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Container } from "@/components/ui/Container";
 import { InstagramIcon } from "@/components/ui/InstagramIcon";
 import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon";
-import { BRANCHES, INSTAGRAM_URL, OPERATOR_DETAILS, OPERATOR_NAME } from "@/lib/branches";
+import { BRANCHES, INSTAGRAM_URL } from "@/lib/branches";
 
 const LINKS = [
   { href: "/catalog", label: "Каталог" },
@@ -68,7 +68,8 @@ export function Footer() {
           <div>© {new Date().getFullYear()} Contrast — Premium Hookah Shop</div>
         </div>
 
-        <div className="basis-full text-xs">{OPERATOR_NAME} · {OPERATOR_DETAILS}</div>
+        {/* Operator details hidden until the Meta submission — restore:
+        <div className="basis-full text-xs">{OPERATOR_NAME} · {OPERATOR_DETAILS}</div> */}
       </Container>
     </footer>
   );
