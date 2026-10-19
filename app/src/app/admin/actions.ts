@@ -56,7 +56,7 @@ export async function saveProductSpecs(
 
   const [type, current] = await Promise.all([
     specTypeId ? prisma.specType.findUnique({ where: { id: specTypeId } }) : null,
-    prisma.product.findUnique({ where: { id: productId }, select: { brand: true, flavor: true, strength: true, packaging: true } }),
+    prisma.product.findUnique({ where: { id: productId }, select: { brand: true, flavor: true, strength: true, packaging: true, specTypeId: true } }),
   ]);
   if (!current) return;
   // Бренд/Вкус/Крепость/Вес уже разобраны из Poster — пишем в колонку только
@@ -77,6 +77,8 @@ export async function saveProductSpecs(
     where: { id: productId },
     data: {
       specTypeId: type?.id ?? null,
+      // Выбор (или сброс) типа руками — автотип по категории его больше не трогает.
+      ...((type?.id ?? null) !== current.specTypeId ? { specTypeManual: true } : {}),
       ...columns,
       // Без типа уже введённые значения не теряем — просто не показываем.
       ...(type ? { specs } : {}),

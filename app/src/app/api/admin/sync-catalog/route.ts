@@ -14,6 +14,7 @@ import {
 } from "@/lib/poster/api";
 import { PosterConfigError } from "@/lib/poster/client";
 import { parseProductAttributes } from "@/lib/poster/parser";
+import { guessSpecTypeName } from "@/lib/spec-types";
 
 function slugify(label: string): string {
   return label
@@ -28,7 +29,8 @@ async function upsertProduct(
   p: PosterProduct,
   categoriesById: Map<string, PosterCategory>,
   dbCategoryByPosterId: Map<number, { id: number }>,
-  existingByPosterId: Map<number, { needsManualReview: boolean; imageSource: string | null }>
+  existingByPosterId: Map<number, { needsManualReview: boolean; imageSource: string | null; specTypeManual: boolean }>,
+  specTypeIdByName: Map<string, number>
 ): Promise<"created" | "updated" | { flagged: boolean }> {
   const leafCategoryName = p.category_name ?? "";
   const { brand, packaging, flavor, strength, needsManualReview } = parseProductAttributes(
@@ -40,6 +42,8 @@ async function upsertProduct(
   const dbCategory = topCategory ? dbCategoryByPosterId.get(Number(topCategory.category_id)) : undefined;
   const categoryLabel = (topCategory?.category_name ?? leafCategoryName).trim();
   const productName = p.product_name.trim();
+  const guessedType = guessSpecTypeName(categoryLabel, productName);
+  const specTypeId = (guessedType && specTypeIdByName.get(guessedType)) || null;
   const photoUrl = posterPhotoUrl(p);
 
   const existing = existingByPosterId.get(Number(p.product_id));
@@ -66,6 +70,7 @@ async function upsertProduct(
       flavor,
       strength,
       needsManualReview,
+      specTypeId,
       active: p.hidden !== "1",
       ...(photoUrl ? { imageUrl: photoUrl, imageSource: "poster" } : {}),
     },
@@ -76,6 +81,8 @@ async function upsertProduct(
       name: productName,
       priceTenge: normalizedPrice(p),
       ...(keepManualFix ? {} : { brand, packaging, flavor, strength, needsManualReview }),
+      // Тип, выбранный руками в админке, автотипом не перезаписываем.
+      ...(existing?.specTypeManual ? {} : { specTypeId }),
       active: p.hidden !== "1",
       ...(!keepManualImage && photoUrl ? { imageUrl: photoUrl, imageSource: "poster" } : {}),
     },
@@ -108,9 +115,11 @@ async function runSync(): Promise<NextResponse> {
     const dbCategoryByPosterId = new Map((await prisma.category.findMany()).map((c) => [c.posterId, c]));
     const existingByPosterId = new Map(
       (
-        await prisma.product.findMany({ select: { posterId: true, needsManualReview: true, imageSource: true } })
+        await prisma.product.findMany({ select: { posterId: true, needsManualReview: true, imageSource: true, specTypeManual: true } })
       ).map((p) => [p.posterId, p])
     );
+
+    const specTypeIdByName = new Map((await prisma.specType.findMany({ select: { id: true, name: true } })).map((t) => [t.name, t.id]));
 
     let created = 0;
     let updated = 0;
@@ -121,7 +130,7 @@ async function runSync(): Promise<NextResponse> {
     for (let i = 0; i < products.length; i += BATCH_SIZE) {
       const batch = products.slice(i, i + BATCH_SIZE);
       const results = await Promise.all(
-        batch.map((p) => upsertProduct(p, categoriesById, dbCategoryByPosterId, existingByPosterId))
+        batch.map((p) => upsertProduct(p, categoriesById, dbCategoryByPosterId, existingByPosterId, specTypeIdByName))
       );
       for (const r of results) {
         if (r === "created") created++;

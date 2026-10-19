@@ -65,6 +65,8 @@ model Product {
   // lib/spec-types.ts. sync-catalog эти два поля не трогает.
   specTypeId        Int?
   specType          SpecType? @relation(fields: [specTypeId], references: [id], onDelete: SetNull)
+  // true — тип выбран руками в /admin/specs; sync-catalog автотип такому не меняет.
+  specTypeManual    Boolean  @default(false)
   specs             Json?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
