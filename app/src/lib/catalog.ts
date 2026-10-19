@@ -205,7 +205,13 @@ export async function getRelatedProducts(product: Product, limit = 4): Promise<P
 // reason: every page that renders the category nav was re-querying this on
 // every request.
 const getCachedCategoryRows = unstable_cache(
-  () => prisma.category.findMany({ orderBy: { label: "asc" } }),
+  () =>
+    prisma.category.findMany({
+      // Poster has empty categories ("Чаши", "Колбы" — their products live
+      // under "Комплектующие"); listing them leads to a dead empty catalog.
+      where: { products: { some: { active: true, hiddenManual: false, branchStock: { some: { branch: "centre" } } } } },
+      orderBy: { label: "asc" },
+    }),
   ["catalog-categories"],
   { tags: ["catalog"], revalidate: 60 }
 );

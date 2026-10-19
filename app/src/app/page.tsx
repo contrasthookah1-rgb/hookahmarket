@@ -1,14 +1,12 @@
-import { CategoryPills } from "@/components/home/CategoryPills";
 import { PromoSlides } from "@/components/home/PromoSlides";
 import { PromoTiles } from "@/components/home/PromoTiles";
 import { TrendingSection } from "@/components/home/TrendingSection";
 import { Hero } from "@/components/layout/Hero";
-import { getCategories, getProducts } from "@/lib/catalog";
+import { getProducts } from "@/lib/catalog";
 import { getActiveHeroSlides, getHeroTiles } from "@/lib/hero-slides";
 
 export default async function Home() {
-  const [categories, products, heroSlides, heroTiles] = await Promise.all([
-    getCategories(),
+  const [products, heroSlides, heroTiles] = await Promise.all([
     getProducts(),
     getActiveHeroSlides(),
     getHeroTiles(),
@@ -19,7 +17,6 @@ export default async function Home() {
   return (
     <>
       <Hero productCount={inStockCount} tiles={heroTiles} />
-      <CategoryPills categories={categories} />
       <PromoTiles productCount={inStockCount} />
       <PromoSlides slides={heroSlides} />
       <TrendingSection products={products} />

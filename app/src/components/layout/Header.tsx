@@ -4,22 +4,23 @@ import { Search, ShoppingBag, User } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { CatalogMenu } from "@/components/layout/CatalogMenu";
 import { Container } from "@/components/ui/Container";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon";
 import { useCart } from "@/lib/cart-context";
+import type { Category } from "@/lib/types";
 
 // Ported from the approved final prototype (contrast-mockup-design-alternatives-nine
 // .vercel.app, 2026-09-10): nav with the brand's gold "C" emblem (real logo mark,
 // added 2026-09-22, cut from the client's PDF/PSD), fixed page links
-// (not a category list — those live on the homepage's CategoryPills and
-// /catalog itself), and a search field. The dark address/hours utility bar
+// (categories live in the "☰ Каталог" menu next to the logo), and a search field. The dark address/hours utility bar
 // that used to sit above this was dropped (2026-09-10, on request) — it
 // wasn't earning its space.
 // "О нас"/"Доставка" don't have pages yet — left out of the nav rather than shipped
 // as dead, styled-like-a-link placeholders (UI/UX audit, 2026-09-10); add them back
 // as real <Link>s once that content exists.
-export function Header({ isLoggedIn }: { isLoggedIn: boolean }) {
+export function Header({ isLoggedIn, categories }: { isLoggedIn: boolean; categories: Category[] }) {
   const { count, open } = useCart();
   const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER;
   // /catalog has its own live-filtering search in the sidebar (combines with
@@ -31,7 +32,7 @@ export function Header({ isLoggedIn }: { isLoggedIn: boolean }) {
   return (
     <header className="sticky top-0 z-40">
       <div className="border-b border-border bg-surface/95 backdrop-blur">
-        <Container className="flex h-[72px] items-center gap-6">
+        <Container className="flex h-[72px] items-center gap-3 sm:gap-6">
           <Link href="/" className="flex shrink-0 items-center gap-2">
             <Image src="/logo-mark.png" alt="" width={279} height={344} className="h-9 w-auto" priority />
             <span className="font-body text-lg font-medium tracking-wider text-foreground uppercase">
@@ -39,16 +40,12 @@ export function Header({ isLoggedIn }: { isLoggedIn: boolean }) {
             </span>
           </Link>
 
+          <CatalogMenu categories={categories} />
+
           <nav
             aria-label="Основная навигация"
             className="hidden shrink-0 items-center gap-5 lg:flex"
           >
-            <Link
-              href="/catalog"
-              className="font-body text-sm text-foreground-secondary transition-colors duration-150 ease-standard hover:text-foreground"
-            >
-              Каталог
-            </Link>
             <Link
               href="/lounge"
               className="font-body text-sm text-foreground-secondary transition-colors duration-150 ease-standard hover:text-foreground"
@@ -76,13 +73,13 @@ export function Header({ isLoggedIn }: { isLoggedIn: boolean }) {
             </form>
           )}
 
-          <div className="ml-auto flex items-center gap-2">
+          <div className="ml-auto flex items-center gap-0.5 sm:gap-2">
             {!isCatalogPage && (
               <Tooltip label="Поиск по каталогу">
                 <Link
                   href="/catalog"
                   aria-label="Поиск по каталогу"
-                  className="flex size-11 items-center justify-center rounded-sm text-foreground-secondary transition-colors duration-150 ease-standard hover:bg-surface-sunken hover:text-foreground lg:hidden"
+                  className="flex size-10 items-center sm:size-11 justify-center rounded-sm text-foreground-secondary transition-colors duration-150 ease-standard hover:bg-surface-sunken hover:text-foreground lg:hidden"
                 >
                   <Search className="size-[18px]" aria-hidden="true" />
                 </Link>
@@ -95,7 +92,7 @@ export function Header({ isLoggedIn }: { isLoggedIn: boolean }) {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Написать в WhatsApp"
-                  className="flex size-11 items-center justify-center rounded-sm text-foreground-secondary transition-colors duration-150 ease-standard hover:bg-surface-sunken hover:text-foreground"
+                  className="hidden size-11 items-center sm:flex justify-center rounded-sm text-foreground-secondary transition-colors duration-150 ease-standard hover:bg-surface-sunken hover:text-foreground"
                 >
                   <WhatsAppIcon className="size-[18px]" />
                 </a>
@@ -105,7 +102,7 @@ export function Header({ isLoggedIn }: { isLoggedIn: boolean }) {
               <Link
                 href={isLoggedIn ? "/account" : "/login"}
                 aria-label="Личный кабинет"
-                className="flex size-11 items-center justify-center rounded-sm text-foreground-secondary transition-colors duration-150 ease-standard hover:bg-surface-sunken hover:text-foreground"
+                className="flex size-10 items-center sm:size-11 justify-center rounded-sm text-foreground-secondary transition-colors duration-150 ease-standard hover:bg-surface-sunken hover:text-foreground"
               >
                 <User className="size-[18px]" aria-hidden="true" />
               </Link>
@@ -115,7 +112,7 @@ export function Header({ isLoggedIn }: { isLoggedIn: boolean }) {
                 type="button"
                 onClick={open}
                 aria-label={`Корзина${count > 0 ? `, товаров: ${count}` : ""}`}
-                className="relative flex size-11 items-center justify-center rounded-sm text-foreground-secondary transition-colors duration-150 ease-standard hover:bg-surface-sunken hover:text-foreground"
+                className="relative flex size-10 items-center sm:size-11 justify-center rounded-sm text-foreground-secondary transition-colors duration-150 ease-standard hover:bg-surface-sunken hover:text-foreground"
               >
                 <ShoppingBag className="size-[18px]" aria-hidden="true" />
                 {count > 0 && (

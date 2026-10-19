@@ -5,6 +5,7 @@ import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { CartProvider } from "@/lib/cart-context";
 import { BRANCHES, INSTAGRAM_URL } from "@/lib/branches";
+import { getCategories } from "@/lib/catalog";
 import { getCustomerSession } from "@/lib/customer-auth";
 import "./globals.css";
 
@@ -51,7 +52,7 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const session = await getCustomerSession();
+  const [session, categories] = await Promise.all([getCustomerSession(), getCategories()]);
 
   return (
     <html lang="ru" className="h-full antialiased">
@@ -62,7 +63,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         />
         <AgeGate />
         <CartProvider>
-          <Header isLoggedIn={Boolean(session)} />
+          <Header isLoggedIn={Boolean(session)} categories={categories} />
           <main className="flex-1">{children}</main>
           <Footer />
           <CartDrawer />
