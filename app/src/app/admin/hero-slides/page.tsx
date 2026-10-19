@@ -34,7 +34,7 @@ export default async function AdminHeroSlidesPage() {
           ← Каталог
         </Link>
         <Link href="/admin/products" className="font-body text-sm text-foreground-secondary hover:text-foreground">
-          Фото товаров
+          Фото и описание
         </Link>
         <Link href="/admin/orders" className="font-body text-sm text-foreground-secondary hover:text-foreground">
           Заказы

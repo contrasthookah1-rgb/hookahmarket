@@ -30,7 +30,9 @@ const EXCLUDED_CATEGORIES = new Set(["Lounge", "Top screen"]);
 // Site stock and orders come from the Уалиханова branch only (client's call,
 // 2026-09-23) — other branches' BranchStock rows may still sit in the DB from
 // older syncs, so filter them out here rather than trust they're gone.
-const STOCK_INCLUDE = { branchStock: { where: { branch: "centre" } } } as const;
+// Main photo = first manual one (ProductImage), else Poster's (Product.imageUrl).
+const MAIN_IMAGE = { orderBy: { sortOrder: "asc" }, take: 1, select: { url: true } } as const;
+const STOCK_INCLUDE = { branchStock: { where: { branch: "centre" } }, images: MAIN_IMAGE } as const;
 
 function toUiProduct(row: {
   id: number;
@@ -46,6 +48,7 @@ function toUiProduct(row: {
   imageUrl: string | null;
   needsManualReview: boolean;
   branchStock: { quantity: number }[];
+  images: { url: string }[];
 }): Product {
   return {
     id: row.id,
@@ -59,7 +62,7 @@ function toUiProduct(row: {
     flavor: row.flavor ?? undefined,
     strength: row.strength ?? undefined,
     packaging: row.packaging ?? undefined,
-    imageUrl: row.imageUrl ?? undefined,
+    imageUrl: row.images[0]?.url ?? row.imageUrl ?? undefined,
     needsManualReview: row.needsManualReview,
   };
 }
@@ -102,6 +105,7 @@ const getCachedCatalogRows = unstable_cache(
         imageUrl: true,
         needsManualReview: true,
         branchStock: { where: { branch: "centre" }, select: { quantity: true } },
+        images: MAIN_IMAGE,
       },
       orderBy: { id: "asc" },
     }),
@@ -147,12 +151,24 @@ export async function getProducts(): Promise<Product[]> {
 export const getProductById = cache(async (id: number): Promise<Product | undefined> => {
   if (!hasDatabase) return MOCK_PRODUCTS.find((p) => p.id === id);
   try {
-    const row = await prisma.product.findUnique({ where: { id }, include: { ...STOCK_INCLUDE, specType: true } });
+    const row = await prisma.product.findUnique({
+      where: { id },
+      include: {
+        branchStock: STOCK_INCLUDE.branchStock,
+        // whole gallery here (the list reads above only need the main photo)
+        images: { orderBy: { sortOrder: "asc" }, select: { url: true } },
+        specType: true,
+      },
+    });
     if (!row || !row.active || row.hiddenManual || EXCLUDED_CATEGORIES.has(row.categoryLabel) || row.branchStock.length === 0) {
       return undefined;
     }
     const product = toUiProduct(row);
     if (row.specType) product.specs = buildSpecList(row.specType.fields, row, row.specs);
+    // Порядок показа: ручные фото → фото из Poster → заглушка категории (в компоненте).
+    const manual = row.images.map((i) => i.url);
+    product.gallery = row.imageUrl && !manual.includes(row.imageUrl) ? [...manual, row.imageUrl] : manual;
+    if (row.descriptionManual) product.description = row.descriptionManual;
     return product;
   } catch (err) {
     console.error("[catalog] DB product read failed, falling back to mock catalog:", err);

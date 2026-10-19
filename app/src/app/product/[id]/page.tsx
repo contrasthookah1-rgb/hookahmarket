@@ -29,7 +29,8 @@ export default async function ProductPage({ params }: PageProps<"/product/[id]">
     "@context": "https://schema.org",
     "@type": "Product",
     name: product.name,
-    image: product.imageUrl,
+    image: product.gallery?.length ? product.gallery : product.imageUrl,
+    description: product.description ? product.description.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim() : undefined,
     category: product.category,
     brand: product.brand ? { "@type": "Brand", name: product.brand } : undefined,
     offers: {

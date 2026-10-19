@@ -40,7 +40,7 @@ export default async function AdminOrdersPage() {
             Каталог
           </Link>
           <Link href="/admin/products" className="font-body text-sm text-foreground-secondary hover:text-foreground">
-            Фото товаров
+            Фото и описание
           </Link>
           <Link href="/admin/hero-slides" className="font-body text-sm text-foreground-secondary hover:text-foreground">
             Слайды на главной

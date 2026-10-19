@@ -5,6 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { ProductCard } from "@/components/commerce/ProductCard";
+import { ProductGallery } from "@/components/product/ProductGallery";
+import { RichText } from "@/components/ui/RichText";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { QuantityStepper } from "@/components/ui/QuantityStepper";
@@ -47,6 +49,9 @@ export function ProductDetailClient({
       </Link>
 
       <div className="mt-6 grid gap-7 lg:grid-cols-2 lg:gap-14">
+        {product.gallery?.length ? (
+          <ProductGallery images={product.gallery} alt={product.name} />
+        ) : (
         <div className="relative aspect-square overflow-hidden rounded-md bg-surface-sunken">
           {product.imageUrl ? (
             // Real per-product photo from an arbitrary supplier/brand site —
@@ -72,6 +77,7 @@ export function ProductDetailClient({
             </div>
           )}
         </div>
+        )}
 
         <div>
           <div className="mb-2 font-body text-xs tracking-wide text-foreground-muted uppercase">
@@ -131,6 +137,12 @@ export function ProductDetailClient({
               {product.stock > 0 && <li>Остаток: {product.stock} шт</li>}
             </ul>
           </div>
+          {product.description && (
+            <div className="border-t border-border py-5">
+              <h2 className="mb-3 font-body text-base text-foreground">Описание</h2>
+              <RichText html={product.description} />
+            </div>
+          )}
         </div>
       </div>
 

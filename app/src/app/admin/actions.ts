@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath, updateTag } from "next/cache";
 import { clearAdminSession, createAdminSession, requireAdmin, verifyAdminPassword } from "@/lib/admin-auth";
 import { hasDatabase, prisma } from "@/lib/db";
-import { getProducts, posterPhotoUrl } from "@/lib/poster/api";
+import { isRichTextEmpty, sanitizeRichText } from "@/lib/rich-text";
 import { columnFor, type ColumnKey, type SpecValues } from "@/lib/spec-types";
 
 export async function loginAdmin(formData: FormData): Promise<{ error?: string }> {
@@ -129,20 +129,53 @@ export async function deleteSpecType(id: number): Promise<void> {
   revalidatePath("/product/[id]", "page");
 }
 
-export async function setProductImage(productId: number, imageUrl: string): Promise<void> {
-  if (!(await requireAdmin())) redirect("/admin/login");
-  if (!hasDatabase) return;
-
-  await prisma.product.update({
-    where: { id: productId },
-    // Tagged "manual" so a later Poster catalog sync never overwrites it —
-    // see the schema comment on Product.imageSource.
-    data: { imageUrl: imageUrl.trim() || null, imageSource: "manual" },
-  });
+function revalidateProduct() {
   revalidatePath("/admin/products");
   revalidatePath("/catalog");
   revalidatePath("/product/[id]", "page");
   updateTag("catalog");
+}
+
+/** Добавляет ручные фото в конец галереи товара; первое фото галереи — главное. */
+export async function addProductImages(productId: number, urls: string[]): Promise<{ id: number; url: string }[]> {
+  if (!(await requireAdmin())) redirect("/admin/login");
+  if (!hasDatabase) return [];
+  const clean = urls.map((u) => u.trim()).filter(Boolean);
+  if (clean.length === 0) return [];
+
+  const max = await prisma.productImage.aggregate({ where: { productId }, _max: { sortOrder: true } });
+  let order = (max._max.sortOrder ?? -1) + 1;
+  const created = await prisma.$transaction(
+    clean.map((url) => prisma.productImage.create({ data: { productId, url, sortOrder: order++ }, select: { id: true, url: true } }))
+  );
+  revalidateProduct();
+  return created;
+}
+
+/** ids — все фото товара в новом порядке. */
+export async function reorderProductImages(productId: number, ids: number[]): Promise<void> {
+  if (!(await requireAdmin())) redirect("/admin/login");
+  if (!hasDatabase) return;
+  await prisma.$transaction(
+    ids.map((id, i) => prisma.productImage.updateMany({ where: { id, productId }, data: { sortOrder: i } }))
+  );
+  revalidateProduct();
+}
+
+export async function deleteProductImage(id: number): Promise<void> {
+  if (!(await requireAdmin())) redirect("/admin/login");
+  if (!hasDatabase) return;
+  await prisma.productImage.deleteMany({ where: { id } });
+  revalidateProduct();
+}
+
+/** Пустое описание = убрать. HTML чистится белым списком (lib/rich-text.ts). */
+export async function saveProductDescription(productId: number, html: string): Promise<void> {
+  if (!(await requireAdmin())) redirect("/admin/login");
+  if (!hasDatabase) return;
+  const clean = isRichTextEmpty(html) ? null : sanitizeRichText(html);
+  await prisma.product.update({ where: { id: productId }, data: { descriptionManual: clean } });
+  revalidateProduct();
 }
 
 export async function setProductHidden(productId: number, hidden: boolean): Promise<void> {
@@ -153,35 +186,6 @@ export async function setProductHidden(productId: number, hidden: boolean): Prom
   revalidatePath("/catalog");
   revalidatePath("/product/[id]", "page");
   updateTag("catalog");
-}
-
-/**
- * Un-does setProductImage's "manual" tag so the next catalog sync is free to
- * overwrite this product's photo again. Also pulls the product's current
- * photo from Poster right away, rather than leaving the row photo-less (or
- * stale) until the nightly cron runs — see the schema comment on
- * Product.imageSource for why manual rows are otherwise protected.
- */
-export async function resetProductImageToPoster(productId: number): Promise<{ imageUrl: string | null }> {
-  if (!(await requireAdmin())) redirect("/admin/login");
-  if (!hasDatabase) return { imageUrl: null };
-
-  const product = await prisma.product.findUnique({ where: { id: productId }, select: { posterId: true } });
-  if (!product) return { imageUrl: null };
-
-  const products = await getProducts();
-  const posterProduct = products.find((p) => Number(p.product_id) === product.posterId);
-  const photoUrl = posterProduct ? posterPhotoUrl(posterProduct) : null;
-
-  await prisma.product.update({
-    where: { id: productId },
-    data: { imageUrl: photoUrl, imageSource: photoUrl ? "poster" : null },
-  });
-  revalidatePath("/admin/products");
-  revalidatePath("/catalog");
-  revalidatePath("/product/[id]", "page");
-  updateTag("catalog");
-  return { imageUrl: photoUrl };
 }
 
 export async function createHeroSlide(formData: FormData): Promise<{ error?: string }> {

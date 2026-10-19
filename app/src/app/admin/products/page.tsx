@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { logoutAdmin } from "@/app/admin/actions";
-import { ProductImageRow } from "@/components/admin/ProductImageRow";
+import { ProductEditRow } from "@/components/admin/ProductEditRow";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
 import { Input } from "@/components/ui/Input";
@@ -20,7 +20,7 @@ export default async function AdminProductsPage({ searchParams }: PageProps<"/ad
 
   const where = {
     ...(q ? { name: { contains: q, mode: "insensitive" as const } } : {}),
-    ...(missingOnly ? { imageUrl: null } : {}),
+    ...(missingOnly ? { imageUrl: null, images: { none: {} } } : {}),
   };
 
   const [products, total] = hasDatabase
@@ -30,7 +30,15 @@ export default async function AdminProductsPage({ searchParams }: PageProps<"/ad
           orderBy: { id: "asc" },
           skip: (page - 1) * PAGE_SIZE,
           take: PAGE_SIZE,
-          select: { id: true, name: true, categoryLabel: true, imageUrl: true, imageSource: true, hiddenManual: true },
+          select: {
+            id: true,
+            name: true,
+            categoryLabel: true,
+            imageUrl: true,
+            hiddenManual: true,
+            descriptionManual: true,
+            images: { orderBy: { sortOrder: "asc" }, select: { id: true, url: true } },
+          },
         }),
         prisma.product.count({ where }),
       ])
@@ -51,7 +59,7 @@ export default async function AdminProductsPage({ searchParams }: PageProps<"/ad
   return (
     <Container className="py-8">
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="font-display text-2xl text-foreground">Фото товаров</h1>
+        <h1 className="font-display text-2xl text-foreground">Фото и описание товаров</h1>
         <div className="flex items-center gap-4">
           <Link href="/admin/catalog" className="font-body text-sm text-foreground-secondary hover:text-foreground">
             Доразметка
@@ -103,13 +111,14 @@ export default async function AdminProductsPage({ searchParams }: PageProps<"/ad
           ) : (
             <ul className="flex flex-col gap-3">
               {products.map((p) => (
-                <ProductImageRow
+                <ProductEditRow
                   key={p.id}
                   productId={p.id}
                   categoryLabel={p.categoryLabel}
                   name={p.name}
                   imageUrl={p.imageUrl}
-                  imageSource={p.imageSource}
+                  images={p.images}
+                  descriptionManual={p.descriptionManual}
                   hiddenManual={p.hiddenManual}
                 />
               ))}

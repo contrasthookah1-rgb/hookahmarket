@@ -27,15 +27,15 @@ model Category {
 }
 
 model Product {
-  id                Int      @id @default(autoincrement())
-  posterId          Int      @unique
+  id                Int            @id @default(autoincrement())
+  posterId          Int            @unique
   // ingredient_id from the connect account specifically — NOT a cross-branch
   // join key (each Poster account has its own local numbering, confirmed
   // against real data), kept only for reference/debugging. BranchStock and
   // BranchProductId below join by normalized product name instead.
   ingredientId      Int?
   categoryId        Int?
-  category          Category? @relation(fields: [categoryId], references: [id])
+  category          Category?      @relation(fields: [categoryId], references: [id])
   categoryLabel     String
   name              String
   priceTenge        Int
@@ -44,7 +44,7 @@ model Product {
   flavor            String?
   strength          String?
   packaging         String?
-  needsManualReview Boolean  @default(false)
+  needsManualReview Boolean        @default(false)
   imageUrl          String?
   // Who set imageUrl last — "poster" (synced from the connect account's own
   // product photo) vs "manual" (uploaded through /admin/products or the hero
@@ -54,29 +54,44 @@ model Product {
   // an admin uploaded on the site would get silently replaced on the next
   // Poster sync.
   imageSource       String?
-  active            Boolean  @default(true)
+  active            Boolean        @default(true)
   // "Скрыть с сайта" checkbox in /admin/products. Separate from `active`
   // because sync-catalog overwrites `active` from Poster's `hidden` flag on
   // every run — a manual hide stored there would be undone nightly.
-  hiddenManual      Boolean  @default(false)
+  hiddenManual      Boolean        @default(false)
   // Тип товара (SpecType) и значения его характеристик { "Материал": "Стекло" }.
   // Ключ — название поля из SpecType.fields на момент сохранения. Бренд/Вкус/
   // Крепость/Вес лежат в brand/flavor/strength/packaging, а не здесь — см.
   // lib/spec-types.ts. sync-catalog эти два поля не трогает.
   specTypeId        Int?
-  specType          SpecType? @relation(fields: [specTypeId], references: [id], onDelete: SetNull)
+  specType          SpecType?      @relation(fields: [specTypeId], references: [id], onDelete: SetNull)
   // true — тип выбран руками в /admin/specs; sync-catalog автотип такому не меняет.
-  specTypeManual    Boolean  @default(false)
+  specTypeManual    Boolean        @default(false)
+  // Описание от админа (HTML, прошло lib/rich-text.ts). Poster текстовых описаний не даёт.
+  descriptionManual String?
+  images            ProductImage[]
   specs             Json?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
 
-  branchStock     BranchStock[]
+  branchStock      BranchStock[]
   branchProductIds BranchProductId[]
 
   @@index([categoryLabel])
   @@index([brand])
   @@index([ingredientId])
+}
+
+// Ручные фото товара (первое = главное). Идут перед фото из Poster
+// (Product.imageUrl), см. lib/catalog.ts. Sync-catalog их не трогает.
+model ProductImage {
+  id        Int     @id @default(autoincrement())
+  productId Int
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url       String
+  sortOrder Int     @default(0)
+
+  @@index([productId, sortOrder])
 }
 
 // Тип товара + список его характеристик. Редактируется в /admin/spec-types
