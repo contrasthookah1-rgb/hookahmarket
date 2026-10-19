@@ -13,14 +13,16 @@ const REVIEW_PAGE_SIZE = 200;
 export default async function AdminCatalogPage() {
   if (!(await requireAdmin())) redirect("/admin/login");
 
+  // Lounge (напитки) и Top screen на сайте скрыты — в доразметке их тоже не показываем.
+  const reviewWhere = { needsManualReview: true, categoryLabel: { notIn: ["Lounge", "Top screen"] } };
   const [needsReview, totalReview, totalProducts] = hasDatabase
     ? await Promise.all([
         prisma.product.findMany({
-          where: { needsManualReview: true },
+          where: reviewWhere,
           take: REVIEW_PAGE_SIZE,
           orderBy: { id: "asc" },
         }),
-        prisma.product.count({ where: { needsManualReview: true } }),
+        prisma.product.count({ where: reviewWhere }),
         prisma.product.count(),
       ])
     : [[], 0, 0];
