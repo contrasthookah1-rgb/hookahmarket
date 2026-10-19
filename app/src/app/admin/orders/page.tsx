@@ -45,6 +45,9 @@ export default async function AdminOrdersPage() {
           <Link href="/admin/hero-slides" className="font-body text-sm text-foreground-secondary hover:text-foreground">
             Слайды на главной
           </Link>
+          <Link href="/admin/specs" className="font-body text-sm text-foreground-secondary hover:text-foreground">
+            Характеристики
+          </Link>
           <form action={logoutAdmin}>
             <Button variant="ghost" size="sm" type="submit">
               Выйти

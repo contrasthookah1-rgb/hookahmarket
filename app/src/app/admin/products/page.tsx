@@ -59,6 +59,9 @@ export default async function AdminProductsPage({ searchParams }: PageProps<"/ad
           <Link href="/admin/hero-slides" className="font-body text-sm text-foreground-secondary hover:text-foreground">
             Слайды на главной
           </Link>
+          <Link href="/admin/specs" className="font-body text-sm text-foreground-secondary hover:text-foreground">
+            Характеристики
+          </Link>
           <Link href="/admin/orders" className="font-body text-sm text-foreground-secondary hover:text-foreground">
             Заказы
           </Link>

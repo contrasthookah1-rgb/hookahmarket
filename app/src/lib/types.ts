@@ -16,6 +16,8 @@ export interface Product {
   packaging?: string;
   imageUrl?: string;
   needsManualReview?: boolean;
+  /** Заполненные характеристики по типу товара (только на странице товара). */
+  specs?: { label: string; value: string }[];
   /** Poster's own product_id — only set for DB-synced products, used server-side to create real Poster orders. */
   posterId?: number;
 }

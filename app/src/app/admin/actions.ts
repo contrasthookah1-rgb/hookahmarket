@@ -5,6 +5,7 @@ import { revalidatePath, updateTag } from "next/cache";
 import { clearAdminSession, createAdminSession, requireAdmin, verifyAdminPassword } from "@/lib/admin-auth";
 import { hasDatabase, prisma } from "@/lib/db";
 import { getProducts, posterPhotoUrl } from "@/lib/poster/api";
+import { columnFor, type ColumnKey, type SpecValues } from "@/lib/spec-types";
 
 export async function loginAdmin(formData: FormData): Promise<{ error?: string }> {
   const password = String(formData.get("password") ?? "");
@@ -42,6 +43,88 @@ export async function updateProductAttributes(
   // that revalidatePath alone doesn't touch — bust it so the edit shows up
   // immediately instead of up to a minute later.
   updateTag("catalog");
+}
+
+/** Тип товара + значения его характеристик. Поля Бренд/Вкус/Крепость/Вес идут в колонки Product, остальные — в specs. */
+export async function saveProductSpecs(
+  productId: number,
+  specTypeId: number | null,
+  values: SpecValues
+): Promise<void> {
+  if (!(await requireAdmin())) redirect("/admin/login");
+  if (!hasDatabase) return;
+
+  const [type, current] = await Promise.all([
+    specTypeId ? prisma.specType.findUnique({ where: { id: specTypeId } }) : null,
+    prisma.product.findUnique({ where: { id: productId }, select: { brand: true, flavor: true, strength: true, packaging: true } }),
+  ]);
+  if (!current) return;
+  // Бренд/Вкус/Крепость/Вес уже разобраны из Poster — пишем в колонку только
+  // если значение реально изменили руками, иначе ничего не трогаем и ночной
+  // sync продолжает их обновлять сам.
+  const columns: Partial<Record<ColumnKey, string | null>> = {};
+  const specs: SpecValues = {};
+  for (const label of type?.fields ?? []) {
+    const value = (values[label] ?? "").trim();
+    const col = columnFor(label);
+    if (col) {
+      if (value !== (current[col] ?? "")) columns[col] = value || null;
+    } else if (value) specs[label] = value;
+  }
+  const editedColumns = Object.keys(columns).length > 0;
+
+  await prisma.product.update({
+    where: { id: productId },
+    data: {
+      specTypeId: type?.id ?? null,
+      ...columns,
+      // Без типа уже введённые значения не теряем — просто не показываем.
+      ...(type ? { specs } : {}),
+      // Ручная правка колонок: sync-catalog не должен затирать их заново распарсенными.
+      ...(editedColumns ? { needsManualReview: false } : {}),
+    },
+  });
+  revalidatePath("/product/[id]", "page");
+  updateTag("catalog");
+}
+
+function parseFields(text: string): string[] {
+  return [...new Set(text.split("\n").map((l) => l.trim()).filter(Boolean))];
+}
+
+export async function saveSpecType(formData: FormData): Promise<{ error?: string }> {
+  if (!(await requireAdmin())) redirect("/admin/login");
+  if (!hasDatabase) return { error: "database_not_configured" };
+
+  const id = Number(formData.get("id")) || null;
+  const name = String(formData.get("name") ?? "").trim();
+  const groupName = String(formData.get("groupName") ?? "").trim();
+  const fields = parseFields(String(formData.get("fields") ?? ""));
+  if (!name || !groupName || fields.length === 0) return { error: "Нужны название, группа и хотя бы одно поле" };
+
+  try {
+    if (id) {
+      await prisma.specType.update({ where: { id }, data: { name, groupName, fields } });
+    } else {
+      const max = await prisma.specType.aggregate({ _max: { position: true } });
+      await prisma.specType.create({ data: { name, groupName, fields, position: (max._max.position ?? -1) + 1 } });
+    }
+  } catch {
+    return { error: "Тип с таким названием уже есть" };
+  }
+  revalidatePath("/admin/spec-types");
+  revalidatePath("/admin/specs");
+  revalidatePath("/product/[id]", "page");
+  return {};
+}
+
+export async function deleteSpecType(id: number): Promise<void> {
+  if (!(await requireAdmin())) redirect("/admin/login");
+  if (!hasDatabase) return;
+  await prisma.specType.delete({ where: { id } });
+  revalidatePath("/admin/spec-types");
+  revalidatePath("/admin/specs");
+  revalidatePath("/product/[id]", "page");
 }
 
 export async function setProductImage(productId: number, imageUrl: string): Promise<void> {

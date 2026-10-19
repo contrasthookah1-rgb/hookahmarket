@@ -5,6 +5,7 @@ import { CATEGORIES as MOCK_CATEGORIES, PRODUCTS as MOCK_PRODUCTS } from "./data
 import { hasDatabase, prisma } from "./db";
 import { formatPrice } from "./format";
 import { normalizeBrandName } from "./poster/parser";
+import { buildSpecList } from "./spec-types";
 import type { Category, Product } from "./types";
 
 // Public read API for catalog data. Poster remains the source of truth (synced
@@ -146,11 +147,13 @@ export async function getProducts(): Promise<Product[]> {
 export const getProductById = cache(async (id: number): Promise<Product | undefined> => {
   if (!hasDatabase) return MOCK_PRODUCTS.find((p) => p.id === id);
   try {
-    const row = await prisma.product.findUnique({ where: { id }, include: STOCK_INCLUDE });
+    const row = await prisma.product.findUnique({ where: { id }, include: { ...STOCK_INCLUDE, specType: true } });
     if (!row || !row.active || row.hiddenManual || EXCLUDED_CATEGORIES.has(row.categoryLabel) || row.branchStock.length === 0) {
       return undefined;
     }
-    return toUiProduct(row);
+    const product = toUiProduct(row);
+    if (row.specType) product.specs = buildSpecList(row.specType.fields, row, row.specs);
+    return product;
   } catch (err) {
     console.error("[catalog] DB product read failed, falling back to mock catalog:", err);
     return MOCK_PRODUCTS.find((p) => p.id === id);

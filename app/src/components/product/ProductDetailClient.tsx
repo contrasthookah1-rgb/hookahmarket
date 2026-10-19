@@ -114,10 +114,20 @@ export function ProductDetailClient({
           <div className="border-t border-border py-5">
             <h2 className="mb-3 font-body text-base text-foreground">Характеристики</h2>
             <ul className="list-disc space-y-1 pl-5 font-body text-base leading-relaxed text-foreground-secondary">
-              {product.brand && <li>Бренд: {product.brand}</li>}
-              {product.flavor && <li>Вкус: {product.flavor}</li>}
-              {product.strength && <li>Крепость: {product.strength}</li>}
-              {product.packaging && <li>Фасовка: {product.packaging}</li>}
+              {product.specs?.length ? (
+                product.specs.map((s) => (
+                  <li key={s.label}>
+                    {s.label}: {s.value}
+                  </li>
+                ))
+              ) : (
+                <>
+                  {product.brand && <li>Бренд: {product.brand}</li>}
+                  {product.flavor && <li>Вкус: {product.flavor}</li>}
+                  {product.strength && <li>Крепость: {product.strength}</li>}
+                  {product.packaging && <li>Фасовка: {product.packaging}</li>}
+                </>
+              )}
               {product.stock > 0 && <li>Остаток: {product.stock} шт</li>}
             </ul>
           </div>

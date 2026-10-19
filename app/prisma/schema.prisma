@@ -59,6 +59,13 @@ model Product {
   // because sync-catalog overwrites `active` from Poster's `hidden` flag on
   // every run — a manual hide stored there would be undone nightly.
   hiddenManual      Boolean  @default(false)
+  // Тип товара (SpecType) и значения его характеристик { "Материал": "Стекло" }.
+  // Ключ — название поля из SpecType.fields на момент сохранения. Бренд/Вкус/
+  // Крепость/Вес лежат в brand/flavor/strength/packaging, а не здесь — см.
+  // lib/spec-types.ts. sync-catalog эти два поля не трогает.
+  specTypeId        Int?
+  specType          SpecType? @relation(fields: [specTypeId], references: [id], onDelete: SetNull)
+  specs             Json?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
@@ -68,6 +75,17 @@ model Product {
   @@index([categoryLabel])
   @@index([brand])
   @@index([ingredientId])
+}
+
+// Тип товара + список его характеристик. Редактируется в /admin/spec-types
+// (начальный список — из миграции 20261019120000_add_spec_types).
+model SpecType {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  groupName String
+  fields    String[]
+  position  Int       @default(0)
+  products  Product[]
 }
 
 // Каталог синкается из connect-аккаунта, но product_id (и ingredient_id) там
