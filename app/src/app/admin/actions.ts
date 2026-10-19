@@ -5,6 +5,7 @@ import { revalidatePath, updateTag } from "next/cache";
 import { clearAdminSession, createAdminSession, requireAdmin, verifyAdminPassword } from "@/lib/admin-auth";
 import { hasDatabase, prisma } from "@/lib/db";
 import { isRichTextEmpty, sanitizeRichText } from "@/lib/rich-text";
+import { SLUG_RE } from "@/lib/slug";
 import { columnFor, type ColumnKey, type SpecValues } from "@/lib/spec-types";
 
 export async function loginAdmin(formData: FormData): Promise<{ error?: string }> {
@@ -341,4 +342,73 @@ export async function deleteLoungeImage(id: number): Promise<void> {
   if (!hasDatabase) return;
   await prisma.loungeImage.deleteMany({ where: { id } });
   revalidateLounge();
+}
+
+function revalidateBlog(slug?: string) {
+  revalidatePath("/blog");
+  revalidatePath("/blog/[slug]", "page");
+  revalidatePath("/admin/articles");
+  updateTag("blog");
+  if (slug) revalidatePath(`/blog/${slug}`);
+}
+
+export interface ArticleInput {
+  id?: number;
+  title: string;
+  slug: string;
+  excerpt: string;
+  content: string;
+  coverImage: string;
+  seoTitle: string;
+  seoDescription: string;
+  published: boolean;
+}
+
+/** Создаёт или обновляет статью. publishedAt ставится при первой публикации и дальше не двигается. */
+export async function saveArticle(input: ArticleInput): Promise<{ id?: number; slug?: string; error?: string }> {
+  if (!(await requireAdmin())) redirect("/admin/login");
+  if (!hasDatabase) return { error: "database_not_configured" };
+
+  const title = input.title.trim();
+  const slug = input.slug.trim();
+  if (!title) return { error: "Нужен заголовок" };
+  if (!SLUG_RE.test(slug)) return { error: "Адрес (slug) — только латиница, цифры и дефисы, например kak-vybrat-kalyan" };
+
+  const data = {
+    title,
+    slug,
+    excerpt: input.excerpt.trim(),
+    content: isRichTextEmpty(input.content) ? "" : sanitizeRichText(input.content),
+    coverImage: input.coverImage.trim() || null,
+    seoTitle: input.seoTitle.trim() || null,
+    seoDescription: input.seoDescription.trim() || null,
+    published: input.published,
+  };
+
+  try {
+    if (input.id) {
+      const existing = await prisma.article.findUnique({ where: { id: input.id }, select: { publishedAt: true } });
+      const publishedAt = data.published ? (existing?.publishedAt ?? new Date()) : existing?.publishedAt ?? null;
+      await prisma.article.update({ where: { id: input.id }, data: { ...data, publishedAt } });
+      revalidateBlog(slug);
+      return { id: input.id, slug };
+    }
+    const created = await prisma.article.create({
+      data: { ...data, publishedAt: data.published ? new Date() : null },
+      select: { id: true },
+    });
+    revalidateBlog(slug);
+    return { id: created.id, slug };
+  } catch {
+    // slug is the only unique column
+    return { error: "Статья с таким адресом (slug) уже есть" };
+  }
+}
+
+export async function deleteArticle(id: number): Promise<void> {
+  if (!(await requireAdmin())) redirect("/admin/login");
+  if (!hasDatabase) return;
+  await prisma.article.delete({ where: { id } });
+  revalidateBlog();
+  redirect("/admin/articles");
 }

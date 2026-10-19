@@ -6,7 +6,7 @@ import Image from "next/image";
 // renders as a plain <img>.
 const OPTIMIZABLE_HOST = /^https:\/\/[a-z0-9-]+\.public\.blob\.vercel-storage\.com\//i;
 
-export function LoungeImage({
+export function UploadedImage({
   src,
   alt,
   sizes,

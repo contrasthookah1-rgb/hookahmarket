@@ -7,6 +7,7 @@ import { CartProvider } from "@/lib/cart-context";
 import { BRANCHES, INSTAGRAM_URL } from "@/lib/branches";
 import { getCategories } from "@/lib/catalog";
 import { getCustomerSession } from "@/lib/customer-auth";
+import { hasPublishedArticles } from "@/lib/blog";
 import { getLounge } from "@/lib/lounge";
 import "./globals.css";
 
@@ -53,7 +54,12 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const [session, categories, lounge] = await Promise.all([getCustomerSession(), getCategories(), getLounge()]);
+  const [session, categories, lounge, blogEnabled] = await Promise.all([
+    getCustomerSession(),
+    getCategories(),
+    getLounge(),
+    hasPublishedArticles(),
+  ]);
   const loungeEnabled = Boolean(lounge?.enabled);
 
   return (
@@ -65,9 +71,9 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         />
         <AgeGate />
         <CartProvider>
-          <Header isLoggedIn={Boolean(session)} categories={categories} loungeEnabled={loungeEnabled} />
+          <Header isLoggedIn={Boolean(session)} categories={categories} loungeEnabled={loungeEnabled} blogEnabled={blogEnabled} />
           <main className="flex-1">{children}</main>
-          <Footer loungeEnabled={loungeEnabled} />
+          <Footer loungeEnabled={loungeEnabled} blogEnabled={blogEnabled} />
           <CartDrawer />
         </CartProvider>
       </body>

@@ -1,7 +1,7 @@
 import { MapPin } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { LoungeImage } from "@/components/lounge/LoungeImage";
+import { UploadedImage } from "@/components/ui/UploadedImage";
 import { Container } from "@/components/ui/Container";
 import { RichText } from "@/components/ui/RichText";
 import { getLounge } from "@/lib/lounge";
@@ -24,7 +24,7 @@ const TILE_SIZES = "(min-width: 1280px) 400px, (min-width: 640px) 33vw, 50vw";
 function Tile({ src, alt }: { src: string; alt: string }) {
   return (
     <div className="relative aspect-[2/3] overflow-hidden rounded-md bg-surface-sunken">
-      <LoungeImage src={src} alt={alt} sizes={TILE_SIZES} className="object-cover" />
+      <UploadedImage src={src} alt={alt} sizes={TILE_SIZES} className="object-cover" />
     </div>
   );
 }
@@ -52,7 +52,7 @@ export default async function LoungePage() {
 
       <section className="relative isolate overflow-hidden bg-surface-inverse">
         {lounge.heroImageUrl && (
-          <LoungeImage src={lounge.heroImageUrl} alt="" sizes="100vw" priority className="-z-10 object-cover opacity-60" />
+          <UploadedImage src={lounge.heroImageUrl} alt="" sizes="100vw" priority className="-z-10 object-cover opacity-60" />
         )}
         <Container className="py-20 sm:py-28 lg:py-40">
           <h1 className="font-display text-4xl text-foreground-on-dark sm:text-5xl">{lounge.title}</h1>

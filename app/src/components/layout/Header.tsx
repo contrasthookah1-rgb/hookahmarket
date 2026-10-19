@@ -24,10 +24,12 @@ export function Header({
   isLoggedIn,
   categories,
   loungeEnabled,
+  blogEnabled,
 }: {
   isLoggedIn: boolean;
   categories: Category[];
   loungeEnabled: boolean;
+  blogEnabled: boolean;
 }) {
   const { count, open } = useCart();
   const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER;
@@ -60,6 +62,14 @@ export function Header({
                 className="font-body text-sm text-foreground-secondary transition-colors duration-150 ease-standard hover:text-foreground"
               >
                 Лаунж
+              </Link>
+            )}
+            {blogEnabled && (
+              <Link
+                href="/blog"
+                className="font-body text-sm text-foreground-secondary transition-colors duration-150 ease-standard hover:text-foreground"
+              >
+                Статьи
               </Link>
             )}
           </nav>

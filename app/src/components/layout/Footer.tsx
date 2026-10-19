@@ -7,11 +7,12 @@ import { BRANCHES, INSTAGRAM_URL } from "@/lib/branches";
 const LINKS = [
   { href: "/catalog", label: "Каталог" },
   { href: "/lounge", label: "Лаунж" },
+  { href: "/blog", label: "Статьи" },
   { href: "/account", label: "Личный кабинет" },
   { href: "/legal/pdn", label: "Согласие на обработку ПДн" },
 ];
 
-export function Footer({ loungeEnabled }: { loungeEnabled: boolean }) {
+export function Footer({ loungeEnabled, blogEnabled }: { loungeEnabled: boolean; blogEnabled: boolean }) {
   const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER;
 
   return (
@@ -34,7 +35,7 @@ export function Footer({ loungeEnabled }: { loungeEnabled: boolean }) {
         </div>
 
         <nav aria-label="Дополнительная навигация" className="flex flex-col gap-2">
-          {LINKS.filter((link) => loungeEnabled || link.href !== "/lounge").map((link) => (
+          {LINKS.filter((link) => (link.href !== "/lounge" || loungeEnabled) && (link.href !== "/blog" || blogEnabled)).map((link) => (
             <Link
               key={link.href}
               href={link.href}

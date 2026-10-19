@@ -76,6 +76,12 @@ export default async function AdminSpecsPage({ searchParams }: PageProps<"/admin
           <Link href="/admin/products" className="font-body text-sm text-foreground-secondary hover:text-foreground">
             Фото и описание
           </Link>
+          <Link href="/admin/lounge" className="font-body text-sm text-foreground-secondary hover:text-foreground">
+            Лаунж
+          </Link>
+          <Link href="/admin/articles" className="font-body text-sm text-foreground-secondary hover:text-foreground">
+            Статьи
+          </Link>
           <Link href="/admin/orders" className="font-body text-sm text-foreground-secondary hover:text-foreground">
             Заказы
           </Link>

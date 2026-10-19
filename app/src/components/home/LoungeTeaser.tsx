@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LoungeImage } from "@/components/lounge/LoungeImage";
+import { UploadedImage } from "@/components/ui/UploadedImage";
 import { Container } from "@/components/ui/Container";
 import type { LoungeView } from "@/lib/lounge";
 
@@ -12,7 +12,7 @@ export function LoungeTeaser({ lounge }: { lounge: LoungeView }) {
         <div className="relative isolate grid overflow-hidden rounded-md bg-surface-inverse lg:grid-cols-2">
           {lounge.heroImageUrl && (
             <div className="relative min-h-56 lg:order-2 lg:min-h-80">
-              <LoungeImage src={lounge.heroImageUrl} alt={lounge.title} sizes="(min-width: 1024px) 50vw, 100vw" className="object-cover" />
+              <UploadedImage src={lounge.heroImageUrl} alt={lounge.title} sizes="(min-width: 1024px) 50vw, 100vw" className="object-cover" />
             </div>
           )}
           <div className="flex flex-col items-start justify-center gap-4 p-8 lg:p-12">

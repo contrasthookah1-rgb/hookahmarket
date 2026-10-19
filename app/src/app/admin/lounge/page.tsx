@@ -38,6 +38,9 @@ export default async function AdminLoungePage() {
           <Link href="/admin/specs" className="font-body text-sm text-foreground-secondary hover:text-foreground">
             Характеристики
           </Link>
+          <Link href="/admin/articles" className="font-body text-sm text-foreground-secondary hover:text-foreground">
+            Статьи
+          </Link>
           <Link href="/admin/orders" className="font-body text-sm text-foreground-secondary hover:text-foreground">
             Заказы
           </Link>

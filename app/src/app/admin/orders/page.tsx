@@ -51,6 +51,9 @@ export default async function AdminOrdersPage() {
           <Link href="/admin/lounge" className="font-body text-sm text-foreground-secondary hover:text-foreground">
             Лаунж
           </Link>
+          <Link href="/admin/articles" className="font-body text-sm text-foreground-secondary hover:text-foreground">
+            Статьи
+          </Link>
           <form action={logoutAdmin}>
             <Button variant="ghost" size="sm" type="submit">
               Выйти
