@@ -6,6 +6,7 @@ import { BRANCHES, INSTAGRAM_URL } from "@/lib/branches";
 
 const LINKS = [
   { href: "/catalog", label: "Каталог" },
+  { href: "/lounge", label: "Лаунж" },
   { href: "/account", label: "Личный кабинет" },
   { href: "/legal/pdn", label: "Согласие на обработку ПДн" },
 ];

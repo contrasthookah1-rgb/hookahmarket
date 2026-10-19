@@ -49,6 +49,12 @@ export function Header({ isLoggedIn }: { isLoggedIn: boolean }) {
             >
               Каталог
             </Link>
+            <Link
+              href="/lounge"
+              className="font-body text-sm text-foreground-secondary transition-colors duration-150 ease-standard hover:text-foreground"
+            >
+              Лаунж
+            </Link>
           </nav>
 
           {!isCatalogPage && (
