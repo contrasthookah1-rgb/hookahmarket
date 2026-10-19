@@ -12,7 +12,15 @@ const LINKS = [
   { href: "/legal/pdn", label: "Согласие на обработку ПДн" },
 ];
 
-export function Footer({ loungeEnabled, blogEnabled }: { loungeEnabled: boolean; blogEnabled: boolean }) {
+export function Footer({
+  loungeEnabled,
+  blogEnabled,
+  isLoggedIn,
+}: {
+  loungeEnabled: boolean;
+  blogEnabled: boolean;
+  isLoggedIn: boolean;
+}) {
   const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER;
 
   return (
@@ -38,7 +46,7 @@ export function Footer({ loungeEnabled, blogEnabled }: { loungeEnabled: boolean;
           {LINKS.filter((link) => (link.href !== "/lounge" || loungeEnabled) && (link.href !== "/blog" || blogEnabled)).map((link) => (
             <Link
               key={link.href}
-              href={link.href}
+              href={link.href === "/account" && !isLoggedIn ? "/login" : link.href}
               className="transition-colors duration-150 ease-standard hover:text-foreground-on-dark"
             >
               {link.label}

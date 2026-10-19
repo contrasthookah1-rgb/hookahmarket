@@ -73,7 +73,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         <CartProvider>
           <Header isLoggedIn={Boolean(session)} categories={categories} loungeEnabled={loungeEnabled} blogEnabled={blogEnabled} />
           <main className="flex-1">{children}</main>
-          <Footer loungeEnabled={loungeEnabled} blogEnabled={blogEnabled} />
+          <Footer loungeEnabled={loungeEnabled} blogEnabled={blogEnabled} isLoggedIn={Boolean(session)} />
           <CartDrawer />
         </CartProvider>
       </body>
