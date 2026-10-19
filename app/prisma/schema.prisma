@@ -193,3 +193,38 @@ model CustomerSession {
 
   @@index([phone])
 }
+
+// Страница /lounge целиком редактируется в /admin/lounge. Одна строка настроек
+// (id = 1), точки и фото; LoungeImage.venueId = null — общая галерея «Атмосфера».
+// Начальные данные — из миграции 20261020140000_add_lounge.
+model LoungeSettings {
+  id             Int     @id @default(1)
+  enabled        Boolean @default(true)
+  title          String
+  subtitle       String
+  // HTML из RichTextEditor, прошёл lib/rich-text.ts
+  bodyHtml       String
+  heroImageUrl   String?
+  // пусто — берётся NEXT_PUBLIC_WHATSAPP_NUMBER
+  whatsappNumber String?
+}
+
+model LoungeVenue {
+  id        Int           @id @default(autoincrement())
+  name      String
+  address   String
+  hours     String
+  mapUrl    String
+  sortOrder Int           @default(0)
+  images    LoungeImage[]
+}
+
+model LoungeImage {
+  id        Int          @id @default(autoincrement())
+  venueId   Int?
+  venue     LoungeVenue? @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  url       String
+  sortOrder Int          @default(0)
+
+  @@index([venueId, sortOrder])
+}

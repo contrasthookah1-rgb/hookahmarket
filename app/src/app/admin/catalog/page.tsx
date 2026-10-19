@@ -41,6 +41,9 @@ export default async function AdminCatalogPage() {
           <Link href="/admin/specs" className="font-body text-sm text-foreground-secondary hover:text-foreground">
             Характеристики
           </Link>
+          <Link href="/admin/lounge" className="font-body text-sm text-foreground-secondary hover:text-foreground">
+            Лаунж
+          </Link>
           <Link href="/admin/orders" className="font-body text-sm text-foreground-secondary hover:text-foreground">
             Заказы
           </Link>

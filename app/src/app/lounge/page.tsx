@@ -1,82 +1,94 @@
 import { MapPin } from "lucide-react";
 import type { Metadata } from "next";
-import Image from "next/image";
+import { notFound } from "next/navigation";
+import { LoungeImage } from "@/components/lounge/LoungeImage";
 import { Container } from "@/components/ui/Container";
-import { BRANCHES, type Branch } from "@/lib/branches";
+import { RichText } from "@/components/ui/RichText";
+import { getLounge } from "@/lib/lounge";
 
-export const metadata: Metadata = {
-  title: "Лаунж",
-  description:
-    "Лаундж-бары Contrast в Астане: Аль-Фараби, 9/2 и Мухамедханова, 4В. Адреса, часы работы и фото.",
-};
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://contrast.example.kz";
 
-// Photos supplied by the client 2026-10-19 (originals in 191026/, resized to
-// public/lounge). All are 2:3 portraits except the Al-Farabi hero (3:2).
-// The last three had no caption — kept in the shared gallery, not tied to a branch.
-const photo = (name: string) => ({ src: `/lounge/${name}.jpg`, width: 1400, height: 2100 });
-
-const LOUNGES: { branch: Branch; name: string; photos: ReturnType<typeof photo>[] }[] = [
-  {
-    branch: "alfarabi",
-    name: "Аль-Фараби",
-    photos: [photo("alfarabi-1"), photo("alfarabi-2")],
-  },
-  {
-    branch: "left",
-    name: "Мухамедханова",
-    photos: [photo("mukhamedkhanova-1")],
-  },
-];
-
-const GALLERY = [photo("gallery-1"), photo("gallery-2"), photo("gallery-3")];
+export async function generateMetadata(): Promise<Metadata> {
+  const lounge = await getLounge();
+  const places = lounge?.venues.map((v) => v.address).join(" и ");
+  return {
+    title: "Лаунж",
+    description: `Лаундж-бары Contrast в Астане${places ? `: ${places}` : ""}. Адреса, часы работы и фото.`,
+    alternates: { canonical: "/lounge" },
+  };
+}
 
 // Portrait tiles: 2 columns on phones, 3 on desktop inside a 1280px container.
 const TILE_SIZES = "(min-width: 1280px) 400px, (min-width: 640px) 33vw, 50vw";
 
-function Tile({ src, width, height }: { src: string; width: number; height: number }) {
+function Tile({ src, alt }: { src: string; alt: string }) {
   return (
-    <Image
-      src={src}
-      width={width}
-      height={height}
-      alt="Интерьер лаундж-бара Contrast"
-      sizes={TILE_SIZES}
-      className="h-auto w-full rounded-md bg-surface-sunken"
-    />
+    <div className="relative aspect-[2/3] overflow-hidden rounded-md bg-surface-sunken">
+      <LoungeImage src={src} alt={alt} sizes={TILE_SIZES} className="object-cover" />
+    </div>
   );
 }
 
-export default function LoungePage() {
+export default async function LoungePage() {
+  const lounge = await getLounge();
+  if (!lounge?.enabled) notFound();
+
+  const whatsapp = lounge.whatsappNumber ?? process.env.NEXT_PUBLIC_WHATSAPP_NUMBER;
+  const bookingText = encodeURIComponent("Здравствуйте! Хочу забронировать стол в Contrast Lounge.");
+
+  const jsonLd = lounge.venues.map((v) => ({
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    name: `${lounge.title} — ${v.name}`,
+    url: `${SITE_URL}/lounge`,
+    image: v.images[0] ? new URL(v.images[0].url, SITE_URL).toString() : undefined,
+    address: { "@type": "PostalAddress", streetAddress: v.address, addressLocality: "Астана", addressCountry: "KZ" },
+    hasMap: v.mapUrl || undefined,
+  }));
+
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+
       <section className="relative isolate overflow-hidden bg-surface-inverse">
-        <Image
-          src="/lounge/alfarabi-hero.jpg"
-          alt=""
-          fill
-          priority
-          sizes="100vw"
-          className="-z-10 object-cover opacity-60"
-        />
+        {lounge.heroImageUrl && (
+          <LoungeImage src={lounge.heroImageUrl} alt="" sizes="100vw" priority className="-z-10 object-cover opacity-60" />
+        )}
         <Container className="py-20 sm:py-28 lg:py-40">
-          <h1 className="font-display text-4xl text-foreground-on-dark sm:text-5xl">Лаунж</h1>
-          <p className="mt-4 max-w-xl font-body text-base text-foreground-on-dark-muted">
-            Две точки в Астане: кальян, чай и тёмные залы до глубокой ночи.
-          </p>
+          <h1 className="font-display text-4xl text-foreground-on-dark sm:text-5xl">{lounge.title}</h1>
+          <p className="mt-4 max-w-xl font-body text-base text-foreground-on-dark-muted">{lounge.subtitle}</p>
         </Container>
       </section>
 
-      {LOUNGES.map(({ branch, name, photos }) => {
-        const b = BRANCHES[branch];
-        return (
-          <section key={branch} className="py-12 sm:py-16">
-            <Container>
-              <h2 className="font-display text-2xl text-foreground sm:text-3xl">{name}</h2>
-              <div className="mt-4 flex flex-col gap-1 font-body text-base text-foreground-secondary">
-                <div>{b.address}</div>
-                <div>{b.hours}</div>
+      {lounge.bodyHtml && (
+        <section className="py-12 sm:py-16">
+          <Container>
+            <RichText html={lounge.bodyHtml} className="max-w-2xl" />
+            {whatsapp && (
+              <a
+                href={`https://wa.me/${whatsapp}?text=${bookingText}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-8 inline-flex items-center justify-center rounded-sm px-7 py-[15px] font-body text-sm font-semibold text-ink-900 transition-transform duration-150 ease-standard hover:scale-[1.02] active:scale-[0.98]"
+                style={{ background: "linear-gradient(135deg, var(--gold-300), var(--gold-700))" }}
+              >
+                Забронировать стол
+              </a>
+            )}
+          </Container>
+        </section>
+      )}
+
+      {lounge.venues.map((v) => (
+        <section key={v.id} className="border-t border-border py-12 sm:py-16">
+          <Container>
+            <h2 className="font-display text-2xl text-foreground sm:text-3xl">{v.name}</h2>
+            <div className="mt-4 flex flex-col gap-1 font-body text-base text-foreground-secondary">
+              <div>{v.address}</div>
+              <div>{v.hours}</div>
+              {v.mapUrl && (
                 <a
-                  href={b.mapUrl}
+                  href={v.mapUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="mt-2 inline-flex w-fit items-center gap-2 text-foreground-accent underline-offset-4 transition-colors duration-150 ease-standard hover:underline"
@@ -84,27 +96,31 @@ export default function LoungePage() {
                   <MapPin className="size-4" aria-hidden="true" />
                   Открыть в 2ГИС
                 </a>
-              </div>
+              )}
+            </div>
+            {v.images.length > 0 && (
               <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
-                {photos.map((p) => (
-                  <Tile key={p.src} {...p} />
+                {v.images.map((img, i) => (
+                  <Tile key={img.id} src={img.url} alt={`${lounge.title} на ${v.name} — зал ${i + 1}`} />
                 ))}
               </div>
-            </Container>
-          </section>
-        );
-      })}
+            )}
+          </Container>
+        </section>
+      ))}
 
-      <section className="bg-surface-sunken py-12 sm:py-16">
-        <Container>
-          <h2 className="font-display text-2xl text-foreground sm:text-3xl">Атмосфера</h2>
-          <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
-            {GALLERY.map((p) => (
-              <Tile key={p.src} {...p} />
-            ))}
-          </div>
-        </Container>
-      </section>
+      {lounge.gallery.length > 0 && (
+        <section className="bg-surface-sunken py-12 sm:py-16">
+          <Container>
+            <h2 className="font-display text-2xl text-foreground sm:text-3xl">Атмосфера</h2>
+            <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
+              {lounge.gallery.map((img, i) => (
+                <Tile key={img.id} src={img.url} alt={`${lounge.title} — атмосфера ${i + 1}`} />
+              ))}
+            </div>
+          </Container>
+        </section>
+      )}
     </>
   );
 }

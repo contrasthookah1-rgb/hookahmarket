@@ -20,7 +20,15 @@ import type { Category } from "@/lib/types";
 // "О нас"/"Доставка" don't have pages yet — left out of the nav rather than shipped
 // as dead, styled-like-a-link placeholders (UI/UX audit, 2026-09-10); add them back
 // as real <Link>s once that content exists.
-export function Header({ isLoggedIn, categories }: { isLoggedIn: boolean; categories: Category[] }) {
+export function Header({
+  isLoggedIn,
+  categories,
+  loungeEnabled,
+}: {
+  isLoggedIn: boolean;
+  categories: Category[];
+  loungeEnabled: boolean;
+}) {
   const { count, open } = useCart();
   const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER;
   // /catalog has its own live-filtering search in the sidebar (combines with
@@ -46,12 +54,14 @@ export function Header({ isLoggedIn, categories }: { isLoggedIn: boolean; catego
             aria-label="Основная навигация"
             className="hidden shrink-0 items-center gap-5 lg:flex"
           >
-            <Link
-              href="/lounge"
-              className="font-body text-sm text-foreground-secondary transition-colors duration-150 ease-standard hover:text-foreground"
-            >
-              Лаунж
-            </Link>
+            {loungeEnabled && (
+              <Link
+                href="/lounge"
+                className="font-body text-sm text-foreground-secondary transition-colors duration-150 ease-standard hover:text-foreground"
+              >
+                Лаунж
+              </Link>
+            )}
           </nav>
 
           {!isCatalogPage && (

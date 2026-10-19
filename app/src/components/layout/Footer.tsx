@@ -11,7 +11,7 @@ const LINKS = [
   { href: "/legal/pdn", label: "Согласие на обработку ПДн" },
 ];
 
-export function Footer() {
+export function Footer({ loungeEnabled }: { loungeEnabled: boolean }) {
   const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER;
 
   return (
@@ -34,7 +34,7 @@ export function Footer() {
         </div>
 
         <nav aria-label="Дополнительная навигация" className="flex flex-col gap-2">
-          {LINKS.map((link) => (
+          {LINKS.filter((link) => loungeEnabled || link.href !== "/lounge").map((link) => (
             <Link
               key={link.href}
               href={link.href}

@@ -249,3 +249,96 @@ export async function resetHeroTile(slot: number): Promise<void> {
   revalidatePath("/admin/hero-slides");
   revalidatePath("/");
 }
+
+function revalidateLounge() {
+  revalidatePath("/lounge");
+  revalidatePath("/admin/lounge");
+  revalidatePath("/");
+  updateTag("lounge");
+}
+
+export async function saveLoungeSettings(data: {
+  enabled: boolean;
+  title: string;
+  subtitle: string;
+  bodyHtml: string;
+  heroImageUrl: string;
+  whatsappNumber: string;
+}): Promise<{ error?: string }> {
+  if (!(await requireAdmin())) redirect("/admin/login");
+  if (!hasDatabase) return { error: "database_not_configured" };
+  const title = data.title.trim();
+  if (!title) return { error: "Нужен заголовок" };
+
+  const fields = {
+    enabled: data.enabled,
+    title,
+    subtitle: data.subtitle.trim(),
+    bodyHtml: isRichTextEmpty(data.bodyHtml) ? "" : sanitizeRichText(data.bodyHtml),
+    heroImageUrl: data.heroImageUrl.trim() || null,
+    // только цифры (wa.me/<номер>); пусто — берётся номер из настроек сайта
+    whatsappNumber: data.whatsappNumber.replace(/\D/g, "") || null,
+  };
+  await prisma.loungeSettings.upsert({ where: { id: 1 }, create: { id: 1, ...fields }, update: fields });
+  revalidateLounge();
+  return {};
+}
+
+export async function saveLoungeVenue(formData: FormData): Promise<{ error?: string }> {
+  if (!(await requireAdmin())) redirect("/admin/login");
+  if (!hasDatabase) return { error: "database_not_configured" };
+
+  const id = Number(formData.get("id")) || null;
+  const name = String(formData.get("name") ?? "").trim();
+  const address = String(formData.get("address") ?? "").trim();
+  const hours = String(formData.get("hours") ?? "").trim();
+  const mapUrl = String(formData.get("mapUrl") ?? "").trim();
+  if (!name || !address || !hours) return { error: "Нужны название, адрес и часы работы" };
+  if (mapUrl && !/^https?:\/\//i.test(mapUrl)) return { error: "Ссылка на 2ГИС должна начинаться с https://" };
+
+  if (id) {
+    await prisma.loungeVenue.update({ where: { id }, data: { name, address, hours, mapUrl } });
+  } else {
+    const max = await prisma.loungeVenue.aggregate({ _max: { sortOrder: true } });
+    await prisma.loungeVenue.create({ data: { name, address, hours, mapUrl, sortOrder: (max._max.sortOrder ?? -1) + 1 } });
+  }
+  revalidateLounge();
+  return {};
+}
+
+export async function deleteLoungeVenue(id: number): Promise<void> {
+  if (!(await requireAdmin())) redirect("/admin/login");
+  if (!hasDatabase) return;
+  await prisma.loungeVenue.delete({ where: { id } });
+  revalidateLounge();
+}
+
+/** venueId = null — общая галерея «Атмосфера». */
+export async function addLoungeImages(venueId: number | null, urls: string[]): Promise<{ id: number; url: string }[]> {
+  if (!(await requireAdmin())) redirect("/admin/login");
+  if (!hasDatabase) return [];
+  const clean = urls.map((u) => u.trim()).filter(Boolean);
+  if (clean.length === 0) return [];
+
+  const max = await prisma.loungeImage.aggregate({ where: { venueId }, _max: { sortOrder: true } });
+  let order = (max._max.sortOrder ?? -1) + 1;
+  const created = await prisma.$transaction(
+    clean.map((url) => prisma.loungeImage.create({ data: { venueId, url, sortOrder: order++ }, select: { id: true, url: true } }))
+  );
+  revalidateLounge();
+  return created;
+}
+
+export async function reorderLoungeImages(ids: number[]): Promise<void> {
+  if (!(await requireAdmin())) redirect("/admin/login");
+  if (!hasDatabase) return;
+  await prisma.$transaction(ids.map((id, i) => prisma.loungeImage.update({ where: { id }, data: { sortOrder: i } })));
+  revalidateLounge();
+}
+
+export async function deleteLoungeImage(id: number): Promise<void> {
+  if (!(await requireAdmin())) redirect("/admin/login");
+  if (!hasDatabase) return;
+  await prisma.loungeImage.deleteMany({ where: { id } });
+  revalidateLounge();
+}
