@@ -1,15 +1,14 @@
 "use client";
 
-import { Search, ShoppingBag, User } from "lucide-react";
+import { ChevronDown, Search, ShoppingBag, User } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { CatalogMenu } from "@/components/layout/CatalogMenu";
 import { Container } from "@/components/ui/Container";
 import { Tooltip } from "@/components/ui/Tooltip";
-import { InstagramIcon } from "@/components/ui/InstagramIcon";
 import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon";
-import { BRANCHES, INSTAGRAM_URL } from "@/lib/branches";
+import { BRANCHES } from "@/lib/branches";
 import { useCart } from "@/lib/cart-context";
 import type { Category } from "@/lib/types";
 
@@ -21,6 +20,9 @@ import type { Category } from "@/lib/types";
 // "О нас"/"Доставка" don't have pages yet — left out of the nav rather than shipped
 // as dead, styled-like-a-link placeholders (UI/UX audit, 2026-09-10); add them back
 // as real <Link>s once that content exists.
+// Shown in the top strip (client, 2026-10-21); the WhatsApp number in the env var is separate.
+const PHONE = "+7 747 387 7070";
+
 export function Header({
   isLoggedIn,
   categories,
@@ -40,25 +42,49 @@ export function Header({
   // (UI/UX audit, 2026-09-17). Everywhere else this is the only way in.
   const isCatalogPage = usePathname().startsWith("/catalog");
 
-  const topLink =
-    "inline-flex items-center gap-1.5 transition-colors duration-150 ease-standard hover:text-foreground-on-dark";
-
+  const topLink = "transition-colors duration-150 ease-standard hover:text-foreground";
   return (
     <>
       {/* First line (back on request, 2026-10-21; modelled on alphahookah.ru): scrolls away, only the main header below sticks. */}
-      <div className="bg-surface-inverse font-body text-xs text-foreground-on-dark-muted">
-        <Container className="flex h-9 items-center justify-end gap-4 sm:justify-between sm:gap-6">
-          <p className="hidden sm:block">Астана · Hookah Market: {BRANCHES.centre.hours.toLowerCase()}</p>
-          <div className="flex items-center gap-4 sm:gap-5">
-            {whatsappNumber && (
-              <a href={`https://wa.me/${whatsappNumber}`} target="_blank" rel="noopener noreferrer" className={topLink}>
-                <WhatsAppIcon className="size-3.5" />
-                WhatsApp
-              </a>
+      <div className="relative z-50 border-b border-border bg-surface font-body text-xs text-foreground-secondary sm:text-sm">
+        <Container className="flex h-9 items-center justify-between gap-4">
+          <nav aria-label="Информация" className="flex items-center gap-4 sm:gap-6">
+            {loungeEnabled && (
+              <Link href="/lounge" className={topLink}>
+                Лаунж
+              </Link>
             )}
-            <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer" className={topLink}>
-              <InstagramIcon className="size-3.5" />
-              Instagram
+            {blogEnabled && (
+              <Link href="/blog" className={topLink}>
+                Статьи
+              </Link>
+            )}
+            <details className="group sm:relative">
+              <summary className={`flex cursor-pointer list-none items-center gap-1 ${topLink} [&::-webkit-details-marker]:hidden`}>
+                Адреса
+                <ChevronDown className="size-3.5 transition-transform group-open:rotate-180" aria-hidden="true" />
+              </summary>
+              <ul className="absolute inset-x-5 top-full z-50 mt-1 sm:inset-x-auto sm:left-0 sm:w-72 rounded-md border border-border bg-surface py-1 shadow-lg">
+                {Object.values(BRANCHES).map((b) => (
+                  <li key={b.mapUrl}>
+                    <a
+                      href={b.mapUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block px-4 py-2 text-foreground transition-colors duration-150 ease-standard hover:bg-surface-sunken"
+                    >
+                      {b.address}
+                      <span className="block text-xs text-foreground-secondary">{b.hours}</span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </details>
+          </nav>
+          <div className="flex items-center gap-4 sm:gap-6">
+            <span className="hidden md:inline">Астана</span>
+            <a href={`tel:${PHONE.replace(/\s/g, "")}`} className={`hidden sm:inline ${topLink}`}>
+              {PHONE}
             </a>
             <Link href={isLoggedIn ? "/account" : "/login"} className={topLink}>
               Личный кабинет
@@ -77,28 +103,6 @@ export function Header({
           </Link>
 
           <CatalogMenu categories={categories} />
-
-          <nav
-            aria-label="Основная навигация"
-            className="hidden shrink-0 items-center gap-5 lg:flex"
-          >
-            {loungeEnabled && (
-              <Link
-                href="/lounge"
-                className="font-body text-sm text-foreground-secondary transition-colors duration-150 ease-standard hover:text-foreground"
-              >
-                Лаунж
-              </Link>
-            )}
-            {blogEnabled && (
-              <Link
-                href="/blog"
-                className="font-body text-sm text-foreground-secondary transition-colors duration-150 ease-standard hover:text-foreground"
-              >
-                Статьи
-              </Link>
-            )}
-          </nav>
 
           {!isCatalogPage && (
             <form
