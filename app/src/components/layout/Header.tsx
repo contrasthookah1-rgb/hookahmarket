@@ -7,16 +7,17 @@ import { usePathname } from "next/navigation";
 import { CatalogMenu } from "@/components/layout/CatalogMenu";
 import { Container } from "@/components/ui/Container";
 import { Tooltip } from "@/components/ui/Tooltip";
+import { InstagramIcon } from "@/components/ui/InstagramIcon";
 import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon";
+import { BRANCHES, INSTAGRAM_URL } from "@/lib/branches";
 import { useCart } from "@/lib/cart-context";
 import type { Category } from "@/lib/types";
 
 // Ported from the approved final prototype (contrast-mockup-design-alternatives-nine
 // .vercel.app, 2026-09-10): nav with the brand's gold "C" emblem (real logo mark,
 // added 2026-09-22, cut from the client's PDF/PSD), fixed page links
-// (categories live in the "☰ Каталог" menu next to the logo), and a search field. The dark address/hours utility bar
-// that used to sit above this was dropped (2026-09-10, on request) — it
-// wasn't earning its space.
+// (categories live in the "☰ Каталог" menu next to the logo), and a search field.
+// The dark utility bar above it was dropped 2026-09-10 and returned 2026-10-21 on the client's request.
 // "О нас"/"Доставка" don't have pages yet — left out of the nav rather than shipped
 // as dead, styled-like-a-link placeholders (UI/UX audit, 2026-09-10); add them back
 // as real <Link>s once that content exists.
@@ -39,8 +40,33 @@ export function Header({
   // (UI/UX audit, 2026-09-17). Everywhere else this is the only way in.
   const isCatalogPage = usePathname().startsWith("/catalog");
 
+  const topLink =
+    "inline-flex items-center gap-1.5 transition-colors duration-150 ease-standard hover:text-foreground-on-dark";
+
   return (
-    <header className="sticky top-0 z-40">
+    <>
+      {/* First line (back on request, 2026-10-21; modelled on alphahookah.ru): scrolls away, only the main header below sticks. */}
+      <div className="bg-surface-inverse font-body text-xs text-foreground-on-dark-muted">
+        <Container className="flex h-9 items-center justify-end gap-4 sm:justify-between sm:gap-6">
+          <p className="hidden sm:block">Астана · Hookah Market: {BRANCHES.centre.hours.toLowerCase()}</p>
+          <div className="flex items-center gap-4 sm:gap-5">
+            {whatsappNumber && (
+              <a href={`https://wa.me/${whatsappNumber}`} target="_blank" rel="noopener noreferrer" className={topLink}>
+                <WhatsAppIcon className="size-3.5" />
+                WhatsApp
+              </a>
+            )}
+            <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer" className={topLink}>
+              <InstagramIcon className="size-3.5" />
+              Instagram
+            </a>
+            <Link href={isLoggedIn ? "/account" : "/login"} className={topLink}>
+              Личный кабинет
+            </Link>
+          </div>
+        </Container>
+      </div>
+      <header className="sticky top-0 z-40">
       <div className="border-b border-border bg-surface/95 backdrop-blur">
         <Container className="flex h-[72px] items-center gap-3 sm:gap-6">
           <Link href="/" className="flex shrink-0 items-center gap-2">
@@ -145,6 +171,7 @@ export function Header({
           </div>
         </Container>
       </div>
-    </header>
+      </header>
+    </>
   );
 }
