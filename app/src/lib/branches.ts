@@ -27,10 +27,3 @@ export const BRANCHES: Record<
 };
 
 export const INSTAGRAM_URL = "https://instagram.com/contrast.sl";
-
-// Legal entity behind the site — the operator of personal data (Закон РК «О персональных данных»).
-// The footer shows "ИП" + name + address (no ИИН); /legal/pdn (currently hidden) shows the full legal entity.
-export const OPERATOR_NAME = "Сұлтанов Ерлан Еркінұлы";
-export const OPERATOR_ADDRESS =
-  "Юридический адрес: Астана, проспект Тұран, д. 55/4";
-export const OPERATOR_DETAILS = `ИИН 931027300648 · ${OPERATOR_ADDRESS}`;

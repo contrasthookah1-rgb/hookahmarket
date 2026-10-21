@@ -12,8 +12,6 @@ export default function PdnConsentPage() {
         Согласие на обработку персональных данных
       </h1>
       <div className="space-y-4 font-body text-base leading-relaxed text-foreground-secondary">
-        {/* Operator details hidden until the Meta submission — restore:
-        <p>Оператор персональных данных: ИП {OPERATOR_NAME} · {OPERATOR_DETAILS}</p> */}
         <p>
           Оформляя заказ на сайте Contrast, вы даёте согласие на обработку ваших персональных
           данных (имя, номер телефона, адрес доставки) в соответствии с Законом Республики
