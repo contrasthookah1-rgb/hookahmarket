@@ -28,6 +28,39 @@ export interface OrderNotificationInput {
   itemsSummary: string;
 }
 
+/** Login code via the approved AUTHENTICATION template `otp_code` (body + COPY_CODE button). */
+export async function sendOtpCode(phone: string, code: string): Promise<boolean> {
+  if (!isWhatsappConfigured()) {
+    console.error("[whatsapp] OTP requested but WHATSAPP_CLOUD_API_TOKEN / WHATSAPP_PHONE_NUMBER_ID not set");
+    return false;
+  }
+  const res = await fetch(`${GRAPH_API_BASE}/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${process.env.WHATSAPP_CLOUD_API_TOKEN}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      messaging_product: "whatsapp",
+      to: phone,
+      type: "template",
+      template: {
+        name: process.env.WHATSAPP_OTP_TEMPLATE || "otp_code",
+        language: { code: "ru" },
+        components: [
+          { type: "body", parameters: [{ type: "text", text: code }] },
+          { type: "button", sub_type: "url", index: "0", parameters: [{ type: "text", text: code }] },
+        ],
+      },
+    }),
+  });
+  if (!res.ok) {
+    // Body has Meta's error code/message (never the code itself) — needed to debug template/number issues.
+    console.error(`[whatsapp] OTP send failed: HTTP ${res.status} ${await res.text().catch(() => "")}`);
+  }
+  return res.ok;
+}
+
 export async function sendOrderNotification(input: OrderNotificationInput): Promise<{ sent: boolean }> {
   // Per-branch number if set, otherwise the shared shop number from the site's WhatsApp button.
   const managerPhone = process.env[MANAGER_PHONE_ENV_VAR[input.branch]] || process.env.NEXT_PUBLIC_WHATSAPP_NUMBER;

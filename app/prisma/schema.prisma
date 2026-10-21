@@ -194,6 +194,18 @@ model CustomerSession {
   @@index([phone])
 }
 
+// Одноразовые коды входа (WhatsApp OTP, см. lib/otp.ts). Хранится HMAC кода, не сам код.
+model OtpCode {
+  id        Int      @id @default(autoincrement())
+  phone     String
+  codeHash  String
+  attempts  Int      @default(0)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([phone, createdAt])
+}
+
 // Страница /lounge целиком редактируется в /admin/lounge. Одна строка настроек
 // (id = 1), точки и фото; LoungeImage.venueId = null — общая галерея «Атмосфера».
 // Начальные данные — из миграции 20261020140000_add_lounge.
