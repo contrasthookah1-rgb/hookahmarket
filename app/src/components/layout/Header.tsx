@@ -96,7 +96,7 @@ export function Header({
       <div className="border-b border-border bg-surface/95 backdrop-blur">
         <Container className="flex h-[72px] items-center gap-3 sm:gap-6">
           <Link href="/" className="flex shrink-0 items-center gap-2">
-            <Image src="/logo-mark.png" alt="" width={279} height={344} className="h-9 w-auto" priority />
+            <Image src="/logo-mark.png" alt="Contrast" width={279} height={344} className="h-9 w-auto" priority />
             <span className="font-body text-lg font-medium tracking-wider text-foreground uppercase">
               Contrast
             </span>

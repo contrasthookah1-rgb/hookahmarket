@@ -52,7 +52,7 @@ export default async function LoungePage() {
 
       <section className="relative isolate overflow-hidden bg-surface-inverse">
         {lounge.heroImageUrl && (
-          <UploadedImage src={lounge.heroImageUrl} alt="" sizes="100vw" priority className="-z-10 object-cover opacity-60" />
+          <UploadedImage src={lounge.heroImageUrl} alt="Contrast Lounge — кальянная в Астане, зал на Аль-Фараби" sizes="100vw" priority className="-z-10 object-cover opacity-60" />
         )}
         <Container className="py-20 sm:py-28 lg:py-40">
           <h1 className="font-display text-4xl text-foreground-on-dark sm:text-5xl">{lounge.title}</h1>
