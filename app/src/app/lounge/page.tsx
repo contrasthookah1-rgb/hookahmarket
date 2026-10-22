@@ -18,13 +18,26 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-// Portrait tiles: 2 columns on phones, 3 on desktop inside a 1280px container.
-const TILE_SIZES = "(min-width: 1280px) 400px, (min-width: 640px) 33vw, 50vw";
-
-function Tile({ src, alt }: { src: string; alt: string }) {
+// First photo of a set is shown large (2×2 on desktop), the rest fill around it —
+// a uniform grid of identical tiles reads like a catalogue, not a room.
+function Photos({ images, title }: { images: { id: number | string; url: string }[]; title: string }) {
   return (
-    <div className="relative aspect-[2/3] overflow-hidden rounded-md bg-surface-sunken">
-      <UploadedImage src={src} alt={alt} sizes={TILE_SIZES} className="object-cover" />
+    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
+      {images.map((img, i) => (
+        <div
+          key={img.id}
+          className={`relative overflow-hidden rounded-md bg-surface-sunken ${
+            i === 0 ? "col-span-2 aspect-[4/3] sm:row-span-2 sm:aspect-auto sm:min-h-[28rem]" : "aspect-[3/4]"
+          }`}
+        >
+          <UploadedImage
+            src={img.url}
+            alt={`${title} — фото ${i + 1}`}
+            sizes={i === 0 ? "(min-width: 640px) 50vw, 100vw" : "(min-width: 640px) 25vw, 50vw"}
+            className="object-cover transition-transform duration-500 ease-standard hover:scale-[1.03]"
+          />
+        </div>
+      ))}
     </div>
   );
 }
@@ -50,31 +63,54 @@ export default async function LoungePage() {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
-      <section className="relative isolate overflow-hidden bg-surface-inverse">
+      {/* Hero: the room itself, headline sitting low on the photo, and the practical
+          facts (where / until when) right under it instead of further down the page. */}
+      <section className="relative isolate flex min-h-[34rem] items-end overflow-hidden bg-surface-inverse lg:min-h-[40rem]">
         {lounge.heroImageUrl && (
-          <UploadedImage src={lounge.heroImageUrl} alt="Contrast Lounge — кальянная в Астане, зал на Аль-Фараби" sizes="100vw" priority className="-z-10 object-cover opacity-60" />
+          <UploadedImage src={lounge.heroImageUrl} alt="Contrast Lounge — кальянная в Астане" sizes="100vw" priority className="-z-10 object-cover" />
         )}
-        <Container className="py-20 sm:py-28 lg:py-40">
-          <h1 className="font-display text-4xl text-foreground-on-dark sm:text-5xl">{lounge.title}</h1>
-          <p className="mt-4 max-w-xl font-body text-base text-foreground-on-dark-muted">{lounge.subtitle}</p>
-        </Container>
-      </section>
-
-      {lounge.bodyHtml && (
-        <section className="py-12 sm:py-16">
-          <Container>
-            <RichText html={lounge.bodyHtml} className="max-w-2xl" />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-t from-black/85 via-black/40 to-black/10" />
+        <Container className="pb-10 pt-32 sm:pb-14">
+          <h1
+            className="rise max-w-4xl font-display text-5xl leading-[1.02] text-foreground-on-dark sm:text-7xl lg:text-8xl"
+            style={{ ["--rise-delay" as string]: "0ms" }}
+          >
+            {lounge.title}
+          </h1>
+          <p
+            className="rise mt-5 max-w-xl font-body text-base text-foreground-on-dark-muted sm:text-lg"
+            style={{ ["--rise-delay" as string]: "120ms" }}
+          >
+            {lounge.subtitle}
+          </p>
+          <div className="rise mt-10 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between" style={{ ["--rise-delay" as string]: "240ms" }}>
+            <ul className="grid gap-x-10 gap-y-4 font-body text-sm text-foreground-on-dark sm:grid-cols-2">
+              {lounge.venues.map((v) => (
+                <li key={v.id} className="border-t border-white/25 pt-3">
+                  <div className="font-semibold">{v.address}</div>
+                  <div className="text-foreground-on-dark-muted">{v.hours}</div>
+                </li>
+              ))}
+            </ul>
             {whatsapp && (
               <a
                 href={`https://wa.me/${whatsapp}?text=${bookingText}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-8 inline-flex items-center justify-center rounded-sm px-7 py-[15px] font-body text-sm font-semibold text-ink-900 transition-transform duration-150 ease-standard hover:scale-[1.02] active:scale-[0.98]"
+                className="inline-flex shrink-0 items-center justify-center rounded-sm px-7 py-[15px] font-body text-sm font-semibold text-ink-900 transition-transform duration-150 ease-standard hover:scale-[1.02] active:scale-[0.98]"
                 style={{ background: "linear-gradient(135deg, var(--gold-300), var(--gold-700))" }}
               >
                 Забронировать стол
               </a>
             )}
+          </div>
+        </Container>
+      </section>
+
+      {lounge.bodyHtml && (
+        <section className="py-16 sm:py-24">
+          <Container>
+            <RichText html={lounge.bodyHtml} className="mx-auto max-w-2xl text-lg" />
           </Container>
         </section>
       )}
@@ -82,29 +118,33 @@ export default async function LoungePage() {
       {lounge.venues.map((v) => (
         <section key={v.id} className="border-t border-border py-12 sm:py-16">
           <Container>
-            <h2 className="font-display text-2xl text-foreground sm:text-3xl">{v.name}</h2>
-            <div className="mt-4 flex flex-col gap-1 font-body text-base text-foreground-secondary">
-              <div>{v.address}</div>
-              <div>{v.hours}</div>
-              {v.mapUrl && (
-                <a
-                  href={v.mapUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-2 inline-flex w-fit items-center gap-2 text-foreground-accent underline-offset-4 transition-colors duration-150 ease-standard hover:underline"
-                >
-                  <MapPin className="size-4" aria-hidden="true" />
-                  Открыть в 2ГИС
-                </a>
-              )}
-            </div>
-            {v.images.length > 0 && (
-              <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
-                {v.images.map((img, i) => (
-                  <Tile key={img.id} src={img.url} alt={`${lounge.title} на ${v.name} — зал ${i + 1}`} />
-                ))}
+            <div className="grid gap-6 lg:grid-cols-[minmax(0,20rem)_1fr] lg:gap-14">
+              <div className="lg:sticky lg:top-28 lg:self-start">
+                <h2 className="font-display text-3xl text-foreground sm:text-4xl">{v.name}</h2>
+                <dl className="mt-5 grid gap-3 font-body text-base text-foreground-secondary">
+                  <div>
+                    <dt className="text-sm text-foreground-muted">Адрес</dt>
+                    <dd>{v.address}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-sm text-foreground-muted">Часы работы</dt>
+                    <dd>{v.hours}</dd>
+                  </div>
+                </dl>
+                {v.mapUrl && (
+                  <a
+                    href={v.mapUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-5 inline-flex w-fit items-center gap-2 font-body text-base text-foreground-accent underline-offset-4 transition-colors duration-150 ease-standard hover:underline"
+                  >
+                    <MapPin className="size-4" aria-hidden="true" />
+                    Открыть в 2ГИС
+                  </a>
+                )}
               </div>
-            )}
+              {v.images.length > 0 && <Photos images={v.images} title={`${lounge.title}, ${v.name}`} />}
+            </div>
           </Container>
         </section>
       ))}
@@ -112,12 +152,8 @@ export default async function LoungePage() {
       {lounge.gallery.length > 0 && (
         <section className="bg-surface-sunken py-12 sm:py-16">
           <Container>
-            <h2 className="font-display text-2xl text-foreground sm:text-3xl">Атмосфера</h2>
-            <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
-              {lounge.gallery.map((img, i) => (
-                <Tile key={img.id} src={img.url} alt={`${lounge.title} — атмосфера ${i + 1}`} />
-              ))}
-            </div>
+            <h2 className="mb-8 font-display text-3xl text-foreground sm:text-4xl">Атмосфера</h2>
+            <Photos images={lounge.gallery} title={lounge.title} />
           </Container>
         </section>
       )}
