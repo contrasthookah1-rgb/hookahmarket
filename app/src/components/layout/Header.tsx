@@ -93,11 +93,11 @@ export function Header({
         </Container>
       </div>
       <header className="sticky top-0 z-40">
-      <div className="border-b border-border bg-surface/95 backdrop-blur">
+      <div className="border-b border-gold-strong/50 bg-surface-inverse/95 backdrop-blur">
         <Container className="flex h-[72px] items-center gap-3 sm:gap-6">
           <Link href="/" className="flex shrink-0 items-center gap-2">
             <Image src="/logo-mark.png" alt="Contrast" width={279} height={344} className="h-9 w-auto" priority />
-            <span className="font-body text-lg font-medium tracking-wider text-foreground uppercase">
+            <span className="font-body text-lg font-medium tracking-wider text-foreground-on-dark uppercase">
               Contrast
             </span>
           </Link>
@@ -107,15 +107,15 @@ export function Header({
           {!isCatalogPage && (
             <form
               action="/catalog"
-              className="hidden min-w-0 flex-1 items-center gap-2 rounded-sm border border-border bg-surface-sunken px-4 py-2.5 transition-colors duration-150 ease-standard focus-within:border-border-strong hover:border-border-strong lg:flex"
+              className="hidden min-w-0 flex-1 items-center gap-2 rounded-sm border border-white/15 bg-white/10 px-4 py-2.5 transition-colors duration-150 ease-standard focus-within:border-gold hover:border-white/30 lg:flex"
             >
-              <Search className="size-4 shrink-0 text-foreground-muted" aria-hidden="true" />
+              <Search className="size-4 shrink-0 text-foreground-on-dark-muted" aria-hidden="true" />
               <input
                 type="text"
                 name="q"
                 placeholder="Поиск по каталогу"
                 aria-label="Поиск по каталогу"
-                className="w-full min-w-0 bg-transparent font-body text-sm text-foreground placeholder:text-foreground-muted focus:outline-none"
+                className="w-full min-w-0 bg-transparent font-body text-sm text-foreground-on-dark placeholder:text-foreground-on-dark-muted focus:outline-none"
               />
               <button type="submit" className="sr-only">
                 Найти
@@ -129,7 +129,7 @@ export function Header({
                 <Link
                   href="/catalog"
                   aria-label="Поиск по каталогу"
-                  className="flex size-10 items-center sm:size-11 justify-center rounded-sm text-foreground-secondary transition-colors duration-150 ease-standard hover:bg-surface-sunken hover:text-foreground lg:hidden"
+                  className="flex size-10 items-center sm:size-11 justify-center rounded-sm text-foreground-on-dark-muted transition-colors duration-150 ease-standard hover:bg-white/10 hover:text-foreground-on-dark lg:hidden"
                 >
                   <Search className="size-[18px]" aria-hidden="true" />
                 </Link>
@@ -142,7 +142,7 @@ export function Header({
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Написать в WhatsApp"
-                  className="hidden size-11 items-center sm:flex justify-center rounded-sm text-foreground-secondary transition-colors duration-150 ease-standard hover:bg-surface-sunken hover:text-foreground"
+                  className="hidden size-11 items-center sm:flex justify-center rounded-sm text-foreground-on-dark-muted transition-colors duration-150 ease-standard hover:bg-white/10 hover:text-foreground-on-dark"
                 >
                   <WhatsAppIcon className="size-[18px]" />
                 </a>
@@ -152,7 +152,7 @@ export function Header({
               <Link
                 href={isLoggedIn ? "/account" : "/login"}
                 aria-label="Личный кабинет"
-                className="flex size-10 items-center sm:size-11 justify-center rounded-sm text-foreground-secondary transition-colors duration-150 ease-standard hover:bg-surface-sunken hover:text-foreground"
+                className="flex size-10 items-center sm:size-11 justify-center rounded-sm text-foreground-on-dark-muted transition-colors duration-150 ease-standard hover:bg-white/10 hover:text-foreground-on-dark"
               >
                 <User className="size-[18px]" aria-hidden="true" />
               </Link>
@@ -162,7 +162,7 @@ export function Header({
                 type="button"
                 onClick={open}
                 aria-label={`Корзина${count > 0 ? `, товаров: ${count}` : ""}`}
-                className="relative flex size-10 items-center sm:size-11 justify-center rounded-sm text-foreground-secondary transition-colors duration-150 ease-standard hover:bg-surface-sunken hover:text-foreground"
+                className="relative flex size-10 items-center sm:size-11 justify-center rounded-sm text-foreground-on-dark-muted transition-colors duration-150 ease-standard hover:bg-white/10 hover:text-foreground-on-dark"
               >
                 <ShoppingBag className="size-[18px]" aria-hidden="true" />
                 {count > 0 && (
