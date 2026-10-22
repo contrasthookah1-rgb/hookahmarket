@@ -7,6 +7,7 @@ import { useState } from "react";
 import { ProductCard } from "@/components/commerce/ProductCard";
 import { ProductGallery } from "@/components/product/ProductGallery";
 import { RichText } from "@/components/ui/RichText";
+import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { QuantityStepper } from "@/components/ui/QuantityStepper";
 import { useCart } from "@/lib/cart-context";
@@ -34,15 +35,6 @@ export function ProductDetailClient({
   const [justAdded, setJustAdded] = useState(false);
   const { addItem } = useCart();
   const categoryImage = getCategoryImage(product.category);
-  const specs: [string, string][] = product.specs?.length
-    ? product.specs.map((s) => [s.label, s.value])
-    : ([
-        ["Бренд", product.brand],
-        ["Вкус", product.flavor],
-        ["Крепость", product.strength],
-        ["Фасовка", product.packaging],
-      ] as [string, string | undefined][]).filter((r): r is [string, string] => Boolean(r[1]));
-  if (product.stock > 0) specs.push(["Остаток", `${product.stock} шт`]);
 
   const handleAddToCart = () => {
     addItem(product, qty);
@@ -87,40 +79,34 @@ export function ProductDetailClient({
         </div>
         )}
 
-        <div className="lg:sticky lg:top-28 lg:self-start">
-          <div className="mb-2 font-body text-sm text-foreground-muted">
-            {product.category}
-            {product.brand ? `, ${product.brand}` : ""}
+        <div>
+          <div className="mb-2 font-body text-xs tracking-wide text-foreground-muted uppercase">
+            {product.category} · {product.brand}
           </div>
-          <h1 className="mb-5 font-display text-3xl leading-tight text-foreground lg:text-5xl">
+          <h1 className="mb-4 font-display text-3xl text-foreground lg:text-4xl">
             {product.name}
           </h1>
-
-          <div className="flex items-baseline gap-3">
-            <span className="font-display text-4xl text-foreground">{product.price}</span>
+          <div className="mb-4 flex items-baseline gap-3">
+            <span className="font-display text-3xl text-foreground">{product.price}</span>
             {product.oldPrice && (
-              <span className="font-body text-lg text-foreground-muted line-through">
+              <span className="font-body text-base text-foreground-muted line-through">
                 {product.oldPrice}
               </span>
             )}
           </div>
-          <p
-            className={`mt-3 flex items-center gap-2 font-body text-sm ${
-              product.stock > 0 && product.stock <= 5 ? "text-danger" : product.stock > 0 ? "text-success" : "text-foreground-muted"
-            }`}
-          >
-            <span aria-hidden="true" className="size-2 rounded-full bg-current" />
-            {product.stock > 0
-              ? product.stock <= 5
-                ? `Осталось ${product.stock} шт`
-                : "В наличии"
-              : "Ожидаем поставку"}
-          </p>
-
+          <div className="mb-6">
+            {product.stock > 0 ? (
+              <Badge tone={product.stock <= 5 ? "danger" : "success"}>
+                {product.stock <= 5 ? `Осталось ${product.stock} шт` : "В наличии"}
+              </Badge>
+            ) : (
+              <Badge tone="neutral">Ожидаем поставку</Badge>
+            )}
+          </div>
           {product.stock > 0 && (
-            <div className="mt-6 flex flex-wrap items-center gap-4">
+            <div className="mb-8 flex flex-wrap items-center gap-4">
               <QuantityStepper value={qty} onChange={setQty} max={product.stock} />
-              <Button variant="primary" size="lg" className="min-w-48 flex-1 sm:flex-none" onClick={handleAddToCart}>
+              <Button variant="primary" size="lg" onClick={handleAddToCart}>
                 {justAdded ? (
                   <>
                     <Check className="size-4" aria-hidden="true" /> Добавлено
@@ -131,21 +117,29 @@ export function ProductDetailClient({
               </Button>
             </div>
           )}
-
-          {specs.length > 0 && (
-            <dl className="mt-8 border-t border-border font-body text-base">
-              {specs.map(([label, value]) => (
-                <div key={label} className="flex justify-between gap-6 border-b border-border py-3">
-                  <dt className="text-foreground-muted">{label}</dt>
-                  <dd className="text-right text-foreground">{value}</dd>
-                </div>
-              ))}
-            </dl>
-          )}
-
+          <div className="border-t border-border py-5">
+            <h2 className="mb-3 font-body text-base text-foreground">Характеристики</h2>
+            <ul className="list-disc space-y-1 pl-5 font-body text-base leading-relaxed text-foreground-secondary">
+              {product.specs?.length ? (
+                product.specs.map((s) => (
+                  <li key={s.label}>
+                    {s.label}: {s.value}
+                  </li>
+                ))
+              ) : (
+                <>
+                  {product.brand && <li>Бренд: {product.brand}</li>}
+                  {product.flavor && <li>Вкус: {product.flavor}</li>}
+                  {product.strength && <li>Крепость: {product.strength}</li>}
+                  {product.packaging && <li>Фасовка: {product.packaging}</li>}
+                </>
+              )}
+              {product.stock > 0 && <li>Остаток: {product.stock} шт</li>}
+            </ul>
+          </div>
           {product.description && (
-            <div className="mt-8">
-              <h2 className="mb-3 font-display text-xl text-foreground">Описание</h2>
+            <div className="border-t border-border py-5">
+              <h2 className="mb-3 font-body text-base text-foreground">Описание</h2>
               <RichText html={product.description} />
             </div>
           )}

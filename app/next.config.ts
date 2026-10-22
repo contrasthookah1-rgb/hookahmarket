@@ -13,7 +13,7 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "www.adalyatobacco.com",
       },
-      // Photos uploaded through the admin (lounge page) — see components/ui/UploadedImage.tsx
+      // Photos uploaded through the admin (lounge page) — see components/lounge/LoungeImage.tsx
       {
         protocol: "https",
         hostname: "*.public.blob.vercel-storage.com",

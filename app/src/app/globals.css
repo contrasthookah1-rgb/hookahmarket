@@ -120,42 +120,6 @@
   .scrollbar-none::-webkit-scrollbar {
     display: none;
   }
-
-  /* One orchestrated entrance per page (hero text), staggered via --rise-delay.
-     Skipped entirely for reduced-motion users. */
-  @media (prefers-reduced-motion: no-preference) {
-    .rise {
-      animation: rise 700ms var(--ease-standard) both;
-      animation-delay: var(--rise-delay, 0ms);
-    }
-  }
-}
-
-/* Slow drifting haze over a hero photo (lab variant A). */
-.smoke {
-  position: absolute;
-  inset: -20%;
-  background:
-    radial-gradient(40% 30% at 30% 60%, rgba(232, 210, 160, 0.16), transparent 70%),
-    radial-gradient(35% 28% at 70% 40%, rgba(255, 255, 255, 0.1), transparent 70%);
-  filter: blur(30px);
-}
-@media (prefers-reduced-motion: no-preference) {
-  .smoke {
-    animation: drift 18s ease-in-out infinite alternate;
-  }
-}
-@keyframes drift {
-  to {
-    transform: translate3d(6%, -4%, 0) scale(1.1);
-  }
-}
-
-@keyframes rise {
-  from {
-    opacity: 0;
-    transform: translateY(16px);
-  }
 }
 
 /* Rich text (описание товара, лаунж, статьи): рендер на сайте и в редакторе
