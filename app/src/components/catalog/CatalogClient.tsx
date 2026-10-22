@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
-import { Tag } from "@/components/ui/Tag";
 import { CATEGORY_SEO } from "@/lib/category-seo";
 import { parsePrice } from "@/lib/format";
 import type { Category, Product } from "@/lib/types";
@@ -76,6 +75,12 @@ export function CatalogClient({
     () => (category ? products.filter((p) => p.category === category) : products),
     [products, category]
   );
+
+  const categoryCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const p of products) counts.set(p.category, (counts.get(p.category) ?? 0) + 1);
+    return counts;
+  }, [products]);
 
   const allBrands = useMemo(
     () => [...new Set(categoryProducts.map((p) => p.brand).filter(Boolean))],
@@ -148,20 +153,10 @@ export function CatalogClient({
   return (
     <div className="py-6 lg:py-8">
       <div className="mb-6">
-        <h1 className="mb-4 font-display text-3xl text-foreground lg:text-5xl">{category ?? "Каталог"}</h1>
-        <div className="flex gap-2.5 overflow-x-auto pb-1" style={{ scrollbarWidth: "thin" }}>
-          <Tag selected={!category} onClick={() => changeCategory(null)}>
-            Все
-          </Tag>
-          {categories.map((c) => (
-            <Tag key={c.id} selected={category === c.label} onClick={() => changeCategory(c.label)}>
-              {c.label}
-            </Tag>
-          ))}
-        </div>
+        <h1 className="font-display text-3xl text-foreground lg:text-5xl">{category ?? "Каталог"}</h1>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[240px_1fr] lg:gap-10">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[240px_1fr] lg:gap-10">
         <aside className="flex flex-row flex-wrap gap-6 lg:flex-col">
           <div className="flex-1 basis-full lg:flex-none lg:basis-auto">
             <Input
@@ -172,7 +167,40 @@ export function CatalogClient({
               icon={<Search className="size-4" aria-hidden="true" />}
             />
           </div>
-          {allBrands.length > 0 && (
+
+          {/* Categories on the left (client, 2026-10-22); brand/strength/pack facets appear once one is picked. */}
+          <div className="min-w-0 basis-full lg:basis-auto">
+            <div className="mb-3 font-body text-xs tracking-wide text-foreground-secondary uppercase">
+              Категории
+            </div>
+            <div
+              className="flex gap-2.5 overflow-x-auto pb-1 lg:flex-col lg:gap-0.5 lg:overflow-visible lg:pb-0"
+              style={{ scrollbarWidth: "thin" }}
+            >
+              {[{ id: 0, label: null as string | null, text: "Все" }, ...categories.map((c) => ({ id: c.id, label: c.label as string | null, text: c.label }))].map(
+                (c) => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    aria-pressed={category === c.label}
+                    onClick={() => changeCategory(c.label)}
+                    className={`flex shrink-0 cursor-pointer items-center justify-between gap-3 rounded-full border px-4 py-2 text-left font-body text-sm whitespace-nowrap transition-colors duration-150 ease-standard lg:w-full lg:rounded-sm lg:border-0 lg:px-3 lg:whitespace-normal ${
+                      category === c.label
+                        ? "border-foreground bg-foreground text-foreground-on-dark lg:bg-surface-sunken lg:font-medium lg:text-foreground lg:shadow-[inset_2px_0_0_var(--gold-500)]"
+                        : "border-border bg-surface text-foreground hover:border-foreground-secondary lg:hover:bg-surface-sunken"
+                    }`}
+                  >
+                    {c.text}
+                    <span className="hidden text-xs text-foreground-muted lg:inline">
+                      {c.label ? (categoryCounts.get(c.label) ?? 0) : products.length}
+                    </span>
+                  </button>
+                )
+              )}
+            </div>
+          </div>
+
+          {category && allBrands.length > 0 && (
             <div>
               <div className="mb-3 font-body text-xs tracking-wide text-foreground-secondary uppercase">
                 Бренд
@@ -214,7 +242,7 @@ export function CatalogClient({
             </div>
           )}
 
-          {allStrengths.length > 0 && (
+          {category && allStrengths.length > 0 && (
             <div>
               <div className="mb-3 font-body text-xs tracking-wide text-foreground-secondary uppercase">
                 Крепость
@@ -232,7 +260,7 @@ export function CatalogClient({
             </div>
           )}
 
-          {allPackagings.length > 0 && (
+          {category && allPackagings.length > 0 && (
             <div>
               <div className="mb-3 font-body text-xs tracking-wide text-foreground-secondary uppercase">
                 Фасовка
@@ -286,7 +314,7 @@ export function CatalogClient({
               />
             </div>
           </div>
-          <div ref={gridTop} className="scroll-mt-24 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:gap-5">
+          <div ref={gridTop} className="scroll-mt-24 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 lg:gap-4">
             {filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map((p) => (
               <ProductCard key={p.id} product={p} />
             ))}

@@ -4,7 +4,7 @@ import { Container } from "@/components/ui/Container";
 import type { Product } from "@/lib/types";
 
 export function TrendingSection({ products }: { products: Product[] }) {
-  const trending = products.slice(0, 8);
+  const trending = products.slice(0, 10);
 
   return (
     <Container className="pb-16 lg:pb-24">
@@ -14,7 +14,7 @@ export function TrendingSection({ products }: { products: Product[] }) {
           Весь каталог →
         </Link>
       </div>
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-5">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-5 lg:gap-4">
         {trending.map((p) => (
           <ProductCard key={p.id} product={p} />
         ))}

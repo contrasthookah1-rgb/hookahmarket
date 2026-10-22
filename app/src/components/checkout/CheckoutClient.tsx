@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { ClosedNotice } from "@/components/checkout/ClosedNotice";
 import { ConsentCheckbox } from "@/components/checkout/ConsentCheckbox";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -155,6 +156,8 @@ export function CheckoutClient() {
           value={comment}
           onChange={(e) => setComment(e.target.value)}
         />
+
+        <ClosedNotice />
 
         <ConsentCheckbox checked={consent} onChange={setConsent} />
 

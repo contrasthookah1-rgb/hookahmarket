@@ -48,13 +48,13 @@ export function ProductCard({ product }: { product: Product }) {
           </div>
         )}
       </div>
-      <div className="p-4">
-        <div className="mb-1 truncate text-xs tracking-wide text-foreground-muted uppercase">
+      <div className="p-3">
+        <div className="mb-1 truncate text-[11px] tracking-wide text-foreground-muted uppercase">
           {product.category}
         </div>
-        <div className="mb-2 line-clamp-2 min-h-10 text-base text-foreground">{product.name}</div>
+        <div className="mb-1.5 line-clamp-2 min-h-10 text-sm text-foreground">{product.name}</div>
         <div className="flex items-baseline gap-2">
-          <span className="font-display text-2xl text-foreground">{product.price}</span>
+          <span className="font-display text-xl text-foreground">{product.price}</span>
           {product.oldPrice && (
             <span className="text-sm text-foreground-muted line-through">{product.oldPrice}</span>
           )}

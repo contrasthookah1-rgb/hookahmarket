@@ -4,6 +4,7 @@ import { Minus, Plus, ShoppingBag, Trash2, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect } from "react";
+import { ClosedNotice } from "@/components/checkout/ClosedNotice";
 import { Button } from "@/components/ui/Button";
 import { BRANCHES } from "@/lib/branches";
 import { useCart } from "@/lib/cart-context";
@@ -137,6 +138,7 @@ export function CartDrawer() {
                 {formatPrice(subtotal)}
               </span>
             </div>
+            <ClosedNotice className="mb-3" />
             <Link href="/checkout" onClick={close} className="block">
 
               <Button variant="primary" size="lg" className="w-full">

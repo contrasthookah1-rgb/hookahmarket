@@ -40,8 +40,8 @@ export function CatalogMenu({ categories }: { categories: Category[] }) {
         aria-expanded={isOpen}
         aria-haspopup="true"
         aria-label="Каталог"
-        className="inline-flex h-11 items-center justify-center gap-2 rounded-sm px-3 font-body text-sm font-semibold text-ink-900 transition-transform duration-150 ease-standard hover:scale-[1.02] active:scale-[0.98] sm:px-5"
-        style={{ background: "linear-gradient(135deg, var(--gold-300), var(--gold-700))" }}
+        className="inline-flex h-11 items-center justify-center gap-2 rounded-sm px-3 font-body text-sm font-semibold text-gold-soft transition-transform duration-150 ease-standard hover:scale-[1.02] active:scale-[0.98] sm:px-5"
+        style={{ background: "var(--ink-900)", boxShadow: "inset 0 0 0 1px var(--gold-500)" }}
       >
         {isOpen ? <X className="size-[18px]" aria-hidden="true" /> : <Menu className="size-[18px]" aria-hidden="true" />}
         <span className="hidden sm:inline">Каталог</span>
