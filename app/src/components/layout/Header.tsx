@@ -40,7 +40,27 @@ export function Header({
   // brand/price/strength facets) — showing this one too would be two search
   // boxes doing the same job on one screen, out of sync with each other
   // (UI/UX audit, 2026-09-17). Everywhere else this is the only way in.
-  const isCatalogPage = usePathname().startsWith("/catalog");
+  const pathname = usePathname();
+  const isCatalogPage = pathname.startsWith("/catalog");
+  // Dark bar everywhere except the home page, where the cream one stays
+  // (client, 2026-10-23: on other pages the cream header blended into the page).
+  const t = pathname === "/"
+    ? {
+        bar: "border-border bg-surface/95",
+        logo: "text-foreground",
+        search: "border-border bg-surface-sunken focus-within:border-border-strong hover:border-border-strong",
+        searchIcon: "text-foreground-muted",
+        input: "text-foreground placeholder:text-foreground-muted",
+        icon: "text-foreground-secondary hover:bg-surface-sunken hover:text-foreground",
+      }
+    : {
+        bar: "border-gold-strong/50 bg-surface-inverse/95",
+        logo: "text-foreground-on-dark",
+        search: "border-white/15 bg-white/10 focus-within:border-gold hover:border-white/30",
+        searchIcon: "text-foreground-on-dark-muted",
+        input: "text-foreground-on-dark placeholder:text-foreground-on-dark-muted",
+        icon: "text-foreground-on-dark-muted hover:bg-white/10 hover:text-foreground-on-dark",
+      };
 
   const topLink = "transition-colors duration-150 ease-standard hover:text-foreground";
   return (
@@ -93,11 +113,11 @@ export function Header({
         </Container>
       </div>
       <header className="sticky top-0 z-40">
-      <div className="border-b border-gold-strong/50 bg-surface-inverse/95 backdrop-blur">
+      <div className={`border-b backdrop-blur ${t.bar}`}>
         <Container className="flex h-[72px] items-center gap-3 sm:gap-6">
           <Link href="/" className="flex shrink-0 items-center gap-2">
             <Image src="/logo-mark.png" alt="Contrast" width={279} height={344} className="h-9 w-auto" priority />
-            <span className="font-body text-lg font-medium tracking-wider text-foreground-on-dark uppercase">
+            <span className={`font-body text-lg font-medium tracking-wider uppercase ${t.logo}`}>
               Contrast
             </span>
           </Link>
@@ -107,15 +127,15 @@ export function Header({
           {!isCatalogPage && (
             <form
               action="/catalog"
-              className="hidden min-w-0 flex-1 items-center gap-2 rounded-sm border border-white/15 bg-white/10 px-4 py-2.5 transition-colors duration-150 ease-standard focus-within:border-gold hover:border-white/30 lg:flex"
+              className={`hidden min-w-0 flex-1 items-center gap-2 rounded-sm border px-4 py-2.5 transition-colors duration-150 ease-standard lg:flex ${t.search}`}
             >
-              <Search className="size-4 shrink-0 text-foreground-on-dark-muted" aria-hidden="true" />
+              <Search className={`size-4 shrink-0 ${t.searchIcon}`} aria-hidden="true" />
               <input
                 type="text"
                 name="q"
                 placeholder="Поиск по каталогу"
                 aria-label="Поиск по каталогу"
-                className="w-full min-w-0 bg-transparent font-body text-sm text-foreground-on-dark placeholder:text-foreground-on-dark-muted focus:outline-none"
+                className={`w-full min-w-0 bg-transparent font-body text-sm focus:outline-none ${t.input}`}
               />
               <button type="submit" className="sr-only">
                 Найти
@@ -129,7 +149,7 @@ export function Header({
                 <Link
                   href="/catalog"
                   aria-label="Поиск по каталогу"
-                  className="flex size-10 items-center sm:size-11 justify-center rounded-sm text-foreground-on-dark-muted transition-colors duration-150 ease-standard hover:bg-white/10 hover:text-foreground-on-dark lg:hidden"
+                  className={`flex size-10 items-center sm:size-11 justify-center rounded-sm transition-colors duration-150 ease-standard lg:hidden ${t.icon}`}
                 >
                   <Search className="size-[18px]" aria-hidden="true" />
                 </Link>
@@ -142,7 +162,7 @@ export function Header({
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Написать в WhatsApp"
-                  className="hidden size-11 items-center sm:flex justify-center rounded-sm text-foreground-on-dark-muted transition-colors duration-150 ease-standard hover:bg-white/10 hover:text-foreground-on-dark"
+                  className={`hidden size-11 items-center sm:flex justify-center rounded-sm transition-colors duration-150 ease-standard ${t.icon}`}
                 >
                   <WhatsAppIcon className="size-[18px]" />
                 </a>
@@ -152,7 +172,7 @@ export function Header({
               <Link
                 href={isLoggedIn ? "/account" : "/login"}
                 aria-label="Личный кабинет"
-                className="flex size-10 items-center sm:size-11 justify-center rounded-sm text-foreground-on-dark-muted transition-colors duration-150 ease-standard hover:bg-white/10 hover:text-foreground-on-dark"
+                className={`flex size-10 items-center sm:size-11 justify-center rounded-sm transition-colors duration-150 ease-standard ${t.icon}`}
               >
                 <User className="size-[18px]" aria-hidden="true" />
               </Link>
@@ -162,7 +182,7 @@ export function Header({
                 type="button"
                 onClick={open}
                 aria-label={`Корзина${count > 0 ? `, товаров: ${count}` : ""}`}
-                className="relative flex size-10 items-center sm:size-11 justify-center rounded-sm text-foreground-on-dark-muted transition-colors duration-150 ease-standard hover:bg-white/10 hover:text-foreground-on-dark"
+                className={`relative flex size-10 items-center sm:size-11 justify-center rounded-sm transition-colors duration-150 ease-standard ${t.icon}`}
               >
                 <ShoppingBag className="size-[18px]" aria-hidden="true" />
                 {count > 0 && (
