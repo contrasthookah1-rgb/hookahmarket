@@ -42,9 +42,9 @@ export function Header({
   // (UI/UX audit, 2026-09-17). Everywhere else this is the only way in.
   const pathname = usePathname();
   const isCatalogPage = pathname.startsWith("/catalog");
-  // Dark bar everywhere except the home page, where the cream one stays
+  // Dark bar everywhere except the home page and /lounge, where the cream one stays
   // (client, 2026-10-23: on other pages the cream header blended into the page).
-  const t = pathname === "/"
+  const t = pathname === "/" || pathname.startsWith("/lounge")
     ? {
         bar: "border-border bg-surface/95",
         logo: "text-foreground",
