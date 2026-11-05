@@ -4,6 +4,7 @@ import { Check, PackageSearch } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
+import { ClosedNotice } from "@/components/checkout/ClosedNotice";
 import { ProductCard } from "@/components/commerce/ProductCard";
 import { ProductGallery } from "@/components/product/ProductGallery";
 import { RichText } from "@/components/ui/RichText";
@@ -103,6 +104,7 @@ export function ProductDetailClient({
               <Badge tone="neutral">Ожидаем поставку</Badge>
             )}
           </div>
+          {product.stock > 0 && <ClosedNotice className="mb-4" />}
           {product.stock > 0 && (
             <div className="mb-8 flex flex-wrap items-center gap-4">
               <QuantityStepper value={qty} onChange={setQty} max={product.stock} />
