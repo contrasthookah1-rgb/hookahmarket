@@ -16,6 +16,8 @@ export interface Product {
   packaging?: string;
   imageUrl?: string;
   needsManualReview?: boolean;
+  /** Отмечен «Новинка» в админке и 30 дней ещё не прошли. */
+  isNew?: boolean;
   /** Заполненные характеристики по типу товара (только на странице товара). */
   specs?: { label: string; value: string }[];
   /** Все фото в порядке показа (только на странице товара). */

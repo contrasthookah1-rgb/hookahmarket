@@ -7,6 +7,7 @@ import {
   reorderProductImages,
   saveProductDescription,
   setProductHidden,
+  setProductNew,
 } from "@/app/admin/actions";
 import { PhotoManager, type Img } from "@/components/admin/PhotoManager";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
@@ -24,6 +25,7 @@ export function ProductEditRow({
   images,
   descriptionManual,
   hiddenManual,
+  newUntil,
 }: {
   productId: number;
   categoryLabel: string;
@@ -32,8 +34,11 @@ export function ProductEditRow({
   images: Img[];
   descriptionManual: string | null;
   hiddenManual: boolean;
+  /** ISO-дата, до которой висит «Новинка»; null — не отмечена. */
+  newUntil: string | null;
 }) {
   const [hidden, setHidden] = useState(hiddenManual);
+  const [until, setUntil] = useState(newUntil && new Date(newUntil) > new Date() ? newUntil : null);
   const [showDesc, setShowDesc] = useState(false);
   const [desc, setDesc] = useState(descriptionManual ?? "");
   const [savingDesc, setSavingDesc] = useState(false);
@@ -53,15 +58,27 @@ export function ProductEditRow({
           <div className="font-body text-sm text-foreground">{name}</div>
           <div className="font-body text-xs text-foreground-muted">{categoryLabel}</div>
         </div>
-        <Checkbox
-          label="Скрыть с сайта"
-          checked={hidden}
-          onChange={async (e) => {
-            const next = e.target.checked;
-            setHidden(next);
-            await setProductHidden(productId, next);
-          }}
-        />
+        <div className="flex shrink-0 flex-col items-end gap-2">
+          <Checkbox
+            label={until ? `Новинка (до ${new Date(until).toLocaleDateString("ru-RU")})` : "Новинка (30 дней)"}
+            checked={Boolean(until)}
+            onChange={async (e) => {
+              const next = e.target.checked;
+              // optimistic: the real date is set on the server, this is just for the label
+              setUntil(next ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() : null);
+              await setProductNew(productId, next);
+            }}
+          />
+          <Checkbox
+            label="Скрыть с сайта"
+            checked={hidden}
+            onChange={async (e) => {
+              const next = e.target.checked;
+              setHidden(next);
+              await setProductHidden(productId, next);
+            }}
+          />
+        </div>
       </div>
 
       <PhotoManager

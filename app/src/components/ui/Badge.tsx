@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-type Tone = "danger" | "danger-solid" | "success" | "neutral";
+type Tone = "danger" | "danger-solid" | "success" | "neutral" | "new";
 
 const toneClasses: Record<Tone, string> = {
   danger: "bg-danger-soft text-danger",
@@ -12,6 +12,9 @@ const toneClasses: Record<Tone, string> = {
   success: "bg-success-soft text-success",
   // "Ожидаем поставку" — opaque for the same over-a-photo reason as danger-solid.
   neutral: "bg-surface-inverse text-foreground-on-dark shadow-sm",
+  // «Новинка» — glossy gold with dark brown text, as the client's reference
+  // (colours sampled from her screenshot, 2026-11-05). Opaque: sits on photos too.
+  new: "bg-[linear-gradient(100deg,#d8a65f,#f1c98c_45%,#fadfb0_70%,#daa863)] text-[#3a2a08] shadow-sm",
 };
 
 export function Badge({

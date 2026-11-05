@@ -189,6 +189,20 @@ export async function setProductHidden(productId: number, hidden: boolean): Prom
   updateTag("catalog");
 }
 
+const NEW_BADGE_DAYS = 30;
+
+/** Ставит «Новинка» на 30 дней (значок сам пропадёт) или снимает её сразу. */
+export async function setProductNew(productId: number, isNew: boolean): Promise<void> {
+  if (!(await requireAdmin())) redirect("/admin/login");
+  if (!hasDatabase) return;
+
+  const newUntil = isNew ? new Date(Date.now() + NEW_BADGE_DAYS * 24 * 60 * 60 * 1000) : null;
+  await prisma.product.update({ where: { id: productId }, data: { newUntil } });
+  revalidatePath("/catalog");
+  revalidatePath("/product/[id]", "page");
+  updateTag("catalog");
+}
+
 export async function createHeroSlide(formData: FormData): Promise<{ error?: string }> {
   if (!(await requireAdmin())) redirect("/admin/login");
   if (!hasDatabase) return { error: "database_not_configured" };

@@ -42,6 +42,7 @@ export function CatalogClient({
   const [sort, setSort] = useState<SortOption>("popular");
   const [brandQuery, setBrandQuery] = useState("");
   const [brandsExpanded, setBrandsExpanded] = useState(false);
+  const [onlyNew, setOnlyNew] = useState(false);
 
   const BRAND_COLLAPSE_COUNT = 8;
 
@@ -75,6 +76,9 @@ export function CatalogClient({
     () => (category ? products.filter((p) => p.category === category) : products),
     [products, category]
   );
+
+  // «Новинки» filter shows only while at least one product is currently new
+  const hasNew = useMemo(() => products.some((p) => p.isNew), [products]);
 
   const categoryCounts = useMemo(() => {
     const counts = new Map<string, number>();
@@ -121,6 +125,7 @@ export function CatalogClient({
       const price = parsePrice(p.price);
       return (
         (!category || p.category === category) &&
+        (!onlyNew || p.isNew) &&
         (brands.length === 0 || brands.includes(p.brand)) &&
         (strengths.length === 0 || (p.strength && strengths.includes(p.strength))) &&
         (packagings.length === 0 || (p.packaging && packagings.includes(p.packaging))) &&
@@ -132,11 +137,11 @@ export function CatalogClient({
     if (sort === "price_asc") result.sort((a, b) => parsePrice(a.price) - parsePrice(b.price));
     if (sort === "price_desc") result.sort((a, b) => parsePrice(b.price) - parsePrice(a.price));
     return result;
-  }, [category, brands, strengths, packagings, min, max, query, sort, products]);
+  }, [category, onlyNew, brands, strengths, packagings, min, max, query, sort, products]);
 
   // Page numbers snap back to 1 whenever any filter/sort/search changes
   // (resetKey differs from the one the page was set under).
-  const resetKey = JSON.stringify([category, brands, strengths, packagings, min, max, query, sort]);
+  const resetKey = JSON.stringify([category, onlyNew, brands, strengths, packagings, min, max, query, sort]);
   const [current, setCurrent] = useState({ key: resetKey, page: 1 });
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const page = Math.min(current.key === resetKey ? current.page : 1, totalPages);
@@ -199,6 +204,15 @@ export function CatalogClient({
               )}
             </div>
           </div>
+
+          {hasNew && (
+            <Checkbox
+              label="Новинки"
+              checked={onlyNew}
+              onChange={() => setOnlyNew((v) => !v)}
+              count={categoryProducts.filter((p) => p.isNew).length}
+            />
+          )}
 
           {category && allBrands.length > 0 && (
             <div>

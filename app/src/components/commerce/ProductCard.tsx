@@ -38,13 +38,15 @@ export function ProductCard({ product }: { product: Product }) {
             <PackageSearch className="size-10" strokeWidth={1.25} aria-hidden="true" />
           </div>
         )}
-        {lowStock && (
-          <div className="absolute left-2.5 top-2.5">
-            {product.stock > 0 ? (
-              <Badge tone="danger-solid">Осталось {product.stock}</Badge>
-            ) : (
-              <Badge tone="neutral">Ожидаем поставку</Badge>
-            )}
+        {(lowStock || product.isNew) && (
+          <div className="absolute left-2.5 top-2.5 flex flex-col items-start gap-1">
+            {product.isNew && <Badge tone="new">Новинка</Badge>}
+            {lowStock &&
+              (product.stock > 0 ? (
+                <Badge tone="danger-solid">Осталось {product.stock}</Badge>
+              ) : (
+                <Badge tone="neutral">Ожидаем поставку</Badge>
+              ))}
           </div>
         )}
       </div>

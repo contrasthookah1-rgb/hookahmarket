@@ -59,6 +59,9 @@ model Product {
   // because sync-catalog overwrites `active` from Poster's `hidden` flag on
   // every run — a manual hide stored there would be undone nightly.
   hiddenManual      Boolean        @default(false)
+  // «Новинка» checkbox in /admin/products sets this to now + 30 days; the badge
+  // shows while it's in the future, so it expires on its own. sync-catalog never touches it.
+  newUntil          DateTime?
   // Тип товара (SpecType) и значения его характеристик { "Материал": "Стекло" }.
   // Ключ — название поля из SpecType.fields на момент сохранения. Бренд/Вкус/
   // Крепость/Вес лежат в brand/flavor/strength/packaging, а не здесь — см.

@@ -47,6 +47,8 @@ function toUiProduct(row: {
   packaging: string | null;
   imageUrl: string | null;
   needsManualReview: boolean;
+  // unstable_cache hands Dates back as ISO strings, hence the union
+  newUntil: Date | string | null;
   branchStock: { quantity: number }[];
   images: { url: string }[];
 }): Product {
@@ -64,6 +66,7 @@ function toUiProduct(row: {
     packaging: row.packaging ?? undefined,
     imageUrl: row.images[0]?.url ?? row.imageUrl ?? undefined,
     needsManualReview: row.needsManualReview,
+    isNew: row.newUntil ? new Date(row.newUntil) > new Date() : undefined,
   };
 }
 
@@ -104,6 +107,7 @@ const getCachedCatalogRows = unstable_cache(
         packaging: true,
         imageUrl: true,
         needsManualReview: true,
+        newUntil: true,
         branchStock: { where: { branch: "centre" }, select: { quantity: true } },
         images: MAIN_IMAGE,
       },

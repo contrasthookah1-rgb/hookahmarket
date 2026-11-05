@@ -36,6 +36,7 @@ export default async function AdminProductsPage({ searchParams }: PageProps<"/ad
             categoryLabel: true,
             imageUrl: true,
             hiddenManual: true,
+            newUntil: true,
             descriptionManual: true,
             images: { orderBy: { sortOrder: "asc" }, select: { id: true, url: true } },
           },
@@ -126,6 +127,7 @@ export default async function AdminProductsPage({ searchParams }: PageProps<"/ad
                   images={p.images}
                   descriptionManual={p.descriptionManual}
                   hiddenManual={p.hiddenManual}
+                  newUntil={p.newUntil?.toISOString() ?? null}
                 />
               ))}
             </ul>

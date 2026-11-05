@@ -95,7 +95,8 @@ export function ProductDetailClient({
               </span>
             )}
           </div>
-          <div className="mb-6">
+          <div className="mb-6 flex flex-wrap items-center gap-2">
+            {product.isNew && <Badge tone="new">Новинка</Badge>}
             {product.stock > 0 ? (
               <Badge tone={product.stock <= 5 ? "danger" : "success"}>
                 {product.stock <= 5 ? `Осталось ${product.stock} шт` : "В наличии"}
